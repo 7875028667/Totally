@@ -27,9 +27,10 @@ export const postMethod = async (url, body) => {
     try {
         let internet = await NetInfo.fetch();
         let StoredData = await getStorageData();
-        // console.log('StoredData',StoredData.data.token);
+        
         const setHeader = () => {
             if (StoredData !== null) {
+                console.log('StoredDataaaaa',StoredData.data.token);
                 return { Authorization: `Bearer ${StoredData.data.token}` };
             }
         };
@@ -57,8 +58,10 @@ export const getMethod = async url => {
     try {
         let internet = await NetInfo.fetch();
         let StoredData = await getStorageData();
+        
         const setHeader = () => {
             if (StoredData.token !== null) {
+                console.log('StoredData.data.token',StoredData.data.token);
                 return `Bearer ${StoredData.data.token}`;
 
             }

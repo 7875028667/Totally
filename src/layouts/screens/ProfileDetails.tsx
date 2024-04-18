@@ -44,45 +44,47 @@ const ProfileDetails = ({ navigation, route }: any) => {
 
     const handleSubmit = async () => {
         setLoading(true)
+
         const formData = new FormData();
-        formData.append('first_name',name);
+        formData.append('name',name);
         formData.append('email',email);
         formData.append('address',address);+
         formData.append('country',country);
         formData.append('phone',mobileNo)
-        formData.append('profile_img',{
+        formData.append('image',{
             uri:imageUri,
             type:'image/jpg',
             name:'profile.jpg'
         });
-
-        console.log('formData',formData);
         
         try {
 
             const api: any = await FormPostMethod(`api/update-profile`, formData);
+           
             
             if (api.status === 200) {
-                const existingUserData = await getStorageData();
-                console.log('existingUserData',existingUserData.data.user.profile_img);
-                
                 setLoading(false);
+                const existingUserData = await getStorageData();                
+               
+               
                 const updateUserDetails = {
-                    ...existingUserData.data.data,
+                    ...existingUserData.data,
                     first_name: name,
                     email: email,
                     phone: mobileNo,
                     country: country,
                     address: address,
-                    profile_img:imageUri ||
+                    profile_img:imageUri || existingUserData.data.user.profile_img
 
                 }
 
                 const updaatedUserData = {
                     ...existingUserData,
-                    user_details: updateUserDetails
+                    user: updateUserDetails
                 }
                 await storeData(updaatedUserData);
+                
+                
                 setLoading(false)
                 navigation.dispatch(CommonActions.goBack())
 
@@ -128,33 +130,6 @@ const ProfileDetails = ({ navigation, route }: any) => {
         }
     };
 
-    // const openImageLibrary = () => {
-    //     const options = {
-    //         mediaType: 'photo',
-    //         includeBase64: true,
-
-    //     };
-
-    //     launchImageLibrary(options, (response: ImagePickerResponse) => {
-    //         if (response.didCancel) {
-    //             console.log('User cancelled');
-    //             setImageUri(null);
-    //         } else if (response.error) {
-    //             console.log('ImagePicker Error:', response.error);
-    //             setImageUri(null);
-    //         } else {
-    //             const source = response.assets[0].uri;
-    //             const newUris = [...imageUris, source];
-    //             setImageUri(source);
-    //             setImageUris(newUris);
-
-    //             if (selectedImage === null) {
-    //                 setSelectedImage(source);
-    //             }
-    //         }
-    //         toggleModal();
-    //     });
-    // };
 
     const openCamera = async () => {
         await requestCameraPermission();
@@ -184,11 +159,8 @@ const ProfileDetails = ({ navigation, route }: any) => {
                     setSelectedImage(source);
                 }
             }
-            // toggleModal();
         });
     };
-
-    // const [isModalVisible, setModalVisible] = useState(false);
 
     return (
         <View style={{ backgroundColor: 'white', height: height * 1 }}>

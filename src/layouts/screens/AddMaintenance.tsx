@@ -6,21 +6,109 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import Modal from 'react-native-modal';
 import Header from '../../component/Header';
+import { getMethod, postMethod } from '../../utils/helper';
+import Snackbar from 'react-native-snackbar';
+import Loader from '../../component/Loader';
 
 
 
 const { width, height } = Dimensions.get('window');
-const AddMaintenance = ({navigation}:any) => {
+const AddMaintenance = ({ navigation }: any) => {
 
-
-    // // PHOTO UPLOAD USESTATE----------------------------------------------------------------
-
-
+    const [loading, setLoading] = useState<boolean>(false)
+    const [vehicleDetail, setVehicleDetail] = useState([])
+    const [billName, setBillName] = useState('');
+    const [billDate, setBillDate] = useState('');
+    const [billAmount, setBillAmount] = useState('');
+    const [billType, setBillType] = useState('');
     const [imageUri, setImageUri] = useState<string | null>(null);
     const [imageUris, setImageUris] = useState<string[]>([]);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
 
+
+
+    useEffect(() =>{
+        getData()
+    },[])
+
+    const getData = async() =>{
+        setLoading(true)
+        try {
+            const api:any = await getMethod(`api/vehicle-detail`);
+            if(api.status === 200){
+                setLoading(false)
+                setVehicleDetail(api.data.data.vehicle)
+            }else{
+                setLoading(false);
+                Snackbar.show({
+                    text: api.data.message,
+                    duration: Snackbar.LENGTH_SHORT,
+                    textColor: '#AE1717',
+                    backgroundColor: '#F2A6A6',
+                });
+            }
+        } catch (error) {
+            console.log('error',error);
+            Snackbar.show({
+                text: error,
+                duration: Snackbar.LENGTH_SHORT,
+                textColor: 'black',
+                backgroundColor: 'red',
+            });
+        }
+    }
+
+
+    const submitData = async () => {
+        setLoading(true)
+        try {
+            const data = {
+                bill_name: billName,
+                bill_date: billDate,
+                bill_amount: billAmount,
+                bill_type: billType,
+                image: imageUri
+            }
+
+            const api: any = await postMethod(`api/add-maintenance`, data);
+            if (api.status === 200) {
+                setLoading(false)
+                Snackbar.show({
+                    text: 'Submit Successfully',
+                    duration: Snackbar.LENGTH_SHORT,
+                    textColor: '#AE1717',
+                    backgroundColor: '#F2A6A6',
+                });
+                setBillName('');
+                setBillDate('');
+                setBillAmount('');
+                setBillType('');
+                setImageUri(null);
+                setSelectedImage(null);
+            } else {
+                setLoading(false);
+                console.log('else block in api');
+                Snackbar.show({
+                    text: api.data.message,
+                    duration: Snackbar.LENGTH_SHORT,
+                    textColor: 'green',
+                    backgroundColor: '#F2A6A6',
+                });
+            }
+        } catch (error) {
+            console.log('errorrrr', error);
+
+            setLoading(false)
+            Snackbar.show({
+                text: error,
+                duration: Snackbar.LENGTH_SHORT,
+                textColor: '#AE1717',
+                backgroundColor: '#F2A6A6',
+            });
+        }
+
+    }
 
     const requestCameraPermission = async () => {
         if (Platform.OS === 'android') {
@@ -41,34 +129,6 @@ const AddMaintenance = ({navigation}:any) => {
                 console.log('Error requesting camera permission:', error);
             }
         }
-    };
-
-    const openImageLibrary = () => {
-        const options = {
-            mediaType: 'photo',
-            includeBase64: true,
-
-        };
-
-        launchImageLibrary(options, (response: ImagePickerResponse) => {
-            if (response.didCancel) {
-                console.log('User cancelled');
-                setImageUri(null);
-            } else if (response.error) {
-                console.log('ImagePicker Error:', response.error);
-                setImageUri(null);
-            } else {
-                const source = response.assets[0].uri;
-                const newUris = [...imageUris, source];
-                setImageUri(source);
-                setImageUris(newUris);
-
-                if (selectedImage === null) {
-                    setSelectedImage(source);
-                }
-            }
-            toggleModal();
-        });
     };
 
     const openCamera = async () => {
@@ -99,32 +159,14 @@ const AddMaintenance = ({navigation}:any) => {
                     setSelectedImage(source);
                 }
             }
-            toggleModal();
         });
     };
 
-    // // PHOTO UPLOAD USESTATE ENDED----------------------------------------------------------------
 
-
-    // MODAL USESTATE----------------------------------------------------------------
-
-
-    const [isModalVisible, setModalVisible] = useState(false);
-
-    const toggleModal = () => {
-        setModalVisible(!isModalVisible);
-    };
-
-
-    useEffect(() => {
-        console.log('Image URI:', imageUri);
-    }, [imageUri]);
-
-    // MODAL USESTATE ENDED----------------------------------------------------------------
 
     return (
         <View style={{ height: '100%' }}>
-            <Header title='Add Maintenance' showBellIcon={true}/>
+            <Header title='Add Maintenance' showBellIcon={false} />
             <ScrollView>
                 <View style={styles.btnView}>
                     <View style={styles.vehicleDetailView}>
@@ -134,31 +176,31 @@ const AddMaintenance = ({navigation}:any) => {
                         <View>
                             <Image source={require('../../Images/truck.png')}
                                 style={styles.vehicleImage} />
-                            <Text style={{ color: 'grey', fontSize: width * 0.03 }}>Small Cargo Truck</Text>
+                            <Text style={{ color: 'grey', fontSize: width * 0.035, textAlign:'center' }}>{vehicleDetail.vehicle_modal}</Text>
                         </View>
                     </View>
                     <View style={styles.vehicleDetailView}>
                         <View style={styles.vehicleDetailInnerViewTwo}>
-                            <Text style={styles.vehicleDetailsText}>Modal No : </Text>
+                            <Text style={styles.vehicleDetailsText}>  license_plate :</Text>
                         </View>
                         <View style={styles.detailDiv}>
-                            <Text style={{ color: 'black', fontSize: width * 0.04 }}>2020</Text>
+                            <Text style={{ color: 'black', fontSize: width * 0.04 }}>{vehicleDetail.license_plate}</Text>
                         </View>
                     </View>
                     <View style={styles.vehicleDetailView}>
                         <View style={styles.vehicleDetailInnerViewTwo}>
-                            <Text style={styles.vehicleDetailsText}>ID : </Text>
+                            <Text style={styles.vehicleDetailsText}>Horsepower :</Text>
                         </View>
                         <View style={styles.detailDiv}>
-                            <Text style={{ color: 'black', fontSize: width * 0.04 }}>HM234701VR</Text>
+                            <Text style={{ color: 'black', fontSize: width * 0.04 }}>{vehicleDetail.horsepower}</Text>
                         </View>
                     </View>
                     <View style={[styles.vehicleDetailView, { paddingBottom: 10 }]}>
                         <View style={styles.vehicleDetailInnerViewTwo}>
-                            <Text style={styles.vehicleDetailsText}>RC : </Text>
+                            <Text style={styles.vehicleDetailsText}>Modal Color :</Text>
                         </View>
                         <View style={styles.detailDiv}>
-                            <Text style={{ color: 'black', fontSize: width * 0.04 }}>REH10345#GH233</Text>
+                            <Text style={{ color: 'black', fontSize: width * 0.04 }}>{vehicleDetail.model_color}</Text>
                         </View>
                     </View>
                 </View>
@@ -166,24 +208,24 @@ const AddMaintenance = ({navigation}:any) => {
                 <View style={styles.billDetail}>
                     <View style={styles.billDetailInner}>
                         <Text style={styles.billHead}>Bill Name : </Text>
-                        <Text style={styles.billText}>Truck Roof Services</Text>
+                        <TextInput placeholder='Enter Bill Name' value={billName} onChangeText={(text) => setBillName(text)} />
                     </View>
                     <View style={styles.billDetailInner}>
                         <Text style={styles.billHead}>Bill Date : </Text>
-                        <Text style={styles.billText}>12/09/2022</Text>
+                        <TextInput placeholder='Enter Bill Date' value={billDate} onChangeText={(text) => setBillDate(text)} keyboardType='decimal-pad' />
                     </View>
                     <View style={styles.billDetailInner}>
                         <Text style={styles.billHead}>Bill Amount : </Text>
-                        <Text style={styles.billText}>$ 300</Text>
+                        <TextInput placeholder='Enter Bill Amount' value={billAmount} onChangeText={(text) => setBillAmount(text)} keyboardType='decimal-pad' />
                     </View>
                     <View style={styles.billDetailInner}>
                         <Text style={styles.billHead}>Bill Type : </Text>
-                        <Text style={styles.billText}>Vehicle Maintenance</Text>
+                        <TextInput placeholder='Enter Bill Type' value={billType} onChangeText={(text) => setBillType(text)} />
                     </View>
                 </View>
                 <View>
                     <TouchableOpacity style={styles.cameraView}
-                        onPress={toggleModal}
+                        onPress={() => openCamera()}
                     >
                         <IonIcon name="camera-outline" color={'#4F4D4D'} size={width * 0.07}
                             style={styles.cameraIcon}
@@ -203,41 +245,13 @@ const AddMaintenance = ({navigation}:any) => {
 
                 <View style={styles.buttonsView}>
                     <TouchableOpacity style={styles.signBtn}
-                    // onPress={handleSubmit}
+                        onPress={submitData}
                     >
                         <Text style={styles.signBtnText}>Submit</Text>
                     </TouchableOpacity>
                 </View>
-
-
-                {/* MODAL VIEW--------------------------------------------------------- */}
-
-                <Modal isVisible={isModalVisible}>
-                    <View style={styles.popUp}>
-                        <View style={styles.crossBtn}>
-                            <View><Text> </Text></View>
-                            <TouchableOpacity onPress={toggleModal} >
-                                <Text style={{ color: 'grey', fontSize: width * 0.06, paddingBottom: 3 }}>X</Text>
-                            </TouchableOpacity>
-                        </View>
-                        <View style={styles.optionBtns}>
-                            <TouchableOpacity style={styles.optionS} onPress={openImageLibrary}>
-                                <MaterialIcons name="insert-photo" size={width * 0.1} color="#49AA67" />
-                                <Text>Library</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.optionS} onPress={openCamera} >
-                                <MaterialCommunityIcons name="camera" size={width * 0.1} color="#49AA67" />
-                                <Text>Camera</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </Modal>
-
-                {/* MODAL VIEW ENDED--------------------------------------------------------- */}
-
-
-
             </ScrollView>
+            <Loader visible={loading} />
         </View>
     )
 }
@@ -245,7 +259,7 @@ const AddMaintenance = ({navigation}:any) => {
 export default AddMaintenance
 
 const styles = StyleSheet.create({
-    
+
     btnView: {
         backgroundColor: 'white',
         justifyContent: 'center',

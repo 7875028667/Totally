@@ -35,7 +35,6 @@ const LoginScreen: FC<Props> = () => {
         try {
             // setLoading(true);
             const api: any = await postMethod(`api/login`, raw);
-            console.log('api',api);
             
             if (api.data.status === true) {
                 // setLoading(false);
@@ -136,7 +135,7 @@ const LoginScreen: FC<Props> = () => {
                                     control={control}
                                     rules={{
                                         required: true,
-                                        minLength: 8,
+                                        minLength: 6,
                                     }}
                                     render={({ field: { onChange, value } }) => (
                                         <>

@@ -37,7 +37,7 @@ const AppNavigation = () => {
 
     const [auth, setAuth] = useState('')
     const [load, setLoad] = useState(false)
-    // console.log('auth',auth);
+    console.log('auth',auth);
 
 
     useEffect(() => {
@@ -47,6 +47,7 @@ const AppNavigation = () => {
             const getData = await getStorageData();
             setAuth(getData.data.token);
             setLoad(false)
+            console.log('auth',auth);
           } catch (error) {
             setLoad(false)
             console.log('Initiate data error');
