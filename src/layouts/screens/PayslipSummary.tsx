@@ -1,8 +1,9 @@
 import { StyleSheet, Text, View, Dimensions, ScrollView, TouchableOpacity } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import Header from '../../component/Header';
+import { getMethod } from '../../utils/helper';
 
 
 
@@ -10,15 +11,36 @@ import Header from '../../component/Header';
 const { width, height } = Dimensions.get('window');
 
 const PayslipSummary = ({ navigation }: any) => {
+    const [loading, setLoading] = useState(false);
+    const [paySlipData, setPaySlipData] = useState([]);
+    
+
+    useEffect(() =>{
+        getPaySlipData()
+    },[])
+
+    const getPaySlipData = async () => {
+        try {
+            setLoading(true)
+            const api: any = await getMethod(`api/payslip`);
+            
+            
+            setPaySlipData(api.data.data.payslip)
+            setLoading(false)
+
+        } catch (error) {
+            setLoading(false)
+            console.log('erroe',error);
+            
+        }
+    }
     return (
         <View style={{ backgroundColor: 'white', height: '100%', marginBottom: 20 }}>
             <Header showBellIcon={true} title='Payslip Summary' />
             <ScrollView>
-                <View
-                // style={{ marginBottom: 20 }}
-                >
+                <View>
                     <View style={styles.odometerReadings}>
-                        <Text style={{ color: '#525252', fontWeight: '600', fontSize: width * 0.041, }}>You have earned gross pay of <Text style={{ color: '#49AA67' }}>September</Text> month</Text>
+                        <Text style={{ color: '#525252', fontWeight: '600', fontSize: width * 0.041, }}>You have earned gross pay of <Text style={{ color: '#49AA67' }}>{paySlipData?.salary_month}</Text> month</Text>
 
                         <View style={styles.progressBarDetail}>
                             <View>
@@ -45,31 +67,33 @@ const PayslipSummary = ({ navigation }: any) => {
                                         <Text style={[styles.dot, { color: '#F20000' }]}>●</Text>
                                     </View>
                                     <View>
-                                        <Text style={styles.calculationText}>2500$</Text>
+                                        <Text style={styles.calculationText}>{paySlipData?.total_statutory_deductions}$</Text>
                                         <Text style={styles.calculationText}>Deduction</Text>
                                     </View>
                                 </View>
                             </View>
                         </View>
                     </View>
+
                     <View style={{ padding: 15, marginTop: 30, marginBottom: 0, }}>
                         <Text style={{ color: '#000000', fontWeight: '600', }}>Earning Details</Text>
                     </View>
+                    
                     <View style={styles.salaryReadings}>
                         <View style={styles.salaryInnerView}>
-                            <View style={styles.payHead}><Text style={styles.payHeadText}>Basic pay</Text></View>
-                            <View><Text style={styles.payValueText}>5500$</Text></View>
+                            <View style={styles.payHead}><Text style={styles.payHeadText}>Basic pay : </Text></View>
+                            <View><Text style={styles.payValueText}>{paySlipData.basic_salary}$</Text></View>
                         </View>
                         <View style={styles.salaryInnerView}>
-                            <View style={styles.payHead}><Text style={styles.payHeadText}>HRA</Text></View>
+                            <View style={styles.payHead}><Text style={styles.payHeadText}>HRA : </Text></View>
                             <View><Text style={styles.payValueText}>1500$</Text></View>
                         </View>
                         <View style={styles.salaryInnerView}>
-                            <View style={styles.payHead}><Text style={styles.payHeadText}>Other Allowance</Text></View>
-                            <View><Text style={styles.payValueText}>500$</Text></View>
+                            <View style={styles.payHead}><Text style={styles.payHeadText}>Other Allowance : </Text></View>
+                            <View><Text style={styles.payValueText}>{paySlipData.total_other_payments}$</Text></View>
                         </View>
                         <View style={styles.salaryInnerView}>
-                            <View style={styles.payHead}><Text style={styles.payHeadText}>SPL Allowance</Text></View>
+                            <View style={styles.payHead}><Text style={styles.payHeadText}>SPL Allowance : </Text></View>
                             <View><Text style={styles.payValueText}>1500$</Text></View>
                         </View>
                     </View>
@@ -141,14 +165,15 @@ const styles = StyleSheet.create({
     salaryReadings: {
         display: 'flex',
         backgroundColor: '#F1F1F1',
-        padding: 10,
+        padding: 20,
         justifyContent: 'center',
     },
     salaryInnerView: {
         display: 'flex',
         flexDirection: 'row',
         width: '90%',
-        alignSelf: 'center'
+        alignSelf: 'center',
+        paddingVertical:10
     },
     payHead: {
         width: '60%',

@@ -1,9 +1,11 @@
-import { StyleSheet, Text, View, Dimensions, Image, ScrollView } from 'react-native'
-import React from 'react'
+import { StyleSheet, Text, View, Dimensions, Image, ScrollView, FlatList } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { TouchableOpacity } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import ProfileHeader from '../../component/ProfileHeader';
+import Header from '../../component/Header';
+import { getMethod } from '../../utils/helper';
+import Loader from '../../component/Loader';
 
 
 
@@ -11,9 +13,66 @@ import ProfileHeader from '../../component/ProfileHeader';
 const { width, height } = Dimensions.get('window');
 
 const AllLeaves = ({ navigation }: any) => {
+  const [leaveData, setLeaveData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    getData()
+  }, [])
+
+  const getData = async () => {
+    setLoading(true)
+    try {
+      const api: any = await getMethod(`api/leave-list`);
+      // console.log('api', api.data.data.leave);
+
+      if (api.status === 200) {
+        setLeaveData(api.data.data.leave)
+        setLoading(false)
+      }
+      else {
+        console.log(api.data.message);
+      }
+    } catch (error) {
+      setLoading(false)
+      console.log('error', error);
+    }
+  }
+
+  const renderLeaveData = ({ item, index }) => {
+    
+    return (
+      <View style={styles.leavesList}>
+        <View style={styles.innerListView}>
+          <Text style={styles.idNumber}>ID: {item.empId}</Text>
+        </View>
+        <View style={styles.innerListView}>
+          <Text style={styles.leaveReason}>{item.reason}</Text>
+          <Text style={styles.leaveStatus}>{item.status === 1 ? 'Pending' : (item.status === 2 ? 'Approved' : 'Cancelled')}</Text>
+        </View>
+        <View style={styles.innerListView}>
+          <Text style={styles.leaveType}>{item.type_name}</Text>
+          <Text></Text>
+        </View>
+        <View style={styles.innerListView}>
+          <Text style={styles.leaveForm}><MaterialCommunityIcons name="file-document-edit-outline" size={width * 0.06} color="#565252" /> Leave Form</Text>
+          <Text style={styles.leaveDates}>{item.from_date} to {item.to_date}</Text>
+        </View>
+        <View style={styles.innerListView}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+            <Image source={{uri:item.profile_img}} style={styles.managerProfile} />
+            <Text style={styles.leaveManager}>Manager</Text>
+          </View>
+          <Text style={styles.leaveManagerName}>{item.user_name}</Text>
+        </View>
+      </View>
+    )
+  }
+
+
   return (
     <View style={styles.container}>
-      <ProfileHeader showBackIcon={true} title='' showBellIcon={true} />
+      <Header title='All Leave' showBellIcon={false} />
 
       <View style={styles.leaveContainer}>
         <View style={styles.newLeaveBtnView}>
@@ -21,92 +80,15 @@ const AllLeaves = ({ navigation }: any) => {
             <Text style={styles.newLeaveBtnText}>New Leave</Text>
           </TouchableOpacity>
         </View>
-        <ScrollView>
-          {/* LIST OF LEAVES-------------------- */}
-          <View style={styles.leavesListContainer}>
-            {/* SINGLE LEAVE---------------------- */}
-            <View style={styles.leavesList}>
-              <View style={styles.innerListView}>
-                <Text style={styles.idNumber}>ID: 95 259105</Text>
-              </View>
-              <View style={styles.innerListView}>
-                <Text style={styles.leaveReason}>Going for a trip</Text>
-                <Text style={styles.leaveStatus}>Pending</Text>
-              </View>
-              <View style={styles.innerListView}>
-                <Text style={styles.leaveType}>Casual Leave</Text>
-                <Text></Text>
-              </View>
-              <View style={styles.innerListView}>
-                <Text style={styles.leaveForm}><MaterialCommunityIcons name="file-document-edit-outline" size={width * 0.06} color="#565252" /> Leave Form</Text>
-                <Text style={styles.leaveDates}>1 May to 5th May</Text>
-              </View>
-              <View style={styles.innerListView}>
-                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                  <Image source={require('../../Images/profile.png')} style={styles.managerProfile} />
-                  <Text style={styles.leaveManager}>Manager</Text>
-                </View>
-                <Text style={styles.leaveManagerName}>John doe</Text>
-              </View>
-            </View>
-            {/* SINGLE LEAVE---------------------- */}
-            <View style={styles.leavesList}>
-              <View style={styles.innerListView}>
-                <Text style={styles.idNumber}>ID: 95 259105</Text>
-              </View>
-              <View style={styles.innerListView}>
-                <Text style={styles.leaveReason}>Going for a trip</Text>
-                <Text style={styles.leaveStatus}>Pending</Text>
-              </View>
-              <View style={styles.innerListView}>
-                <Text style={styles.leaveType}>Casual Leave</Text>
-                <Text></Text>
-              </View>
-              <View style={styles.innerListView}>
-                <Text style={styles.leaveForm}><MaterialCommunityIcons name="file-document-edit-outline" size={width * 0.06} color="#565252" /> Leave Form</Text>
-                <Text style={styles.leaveDates}>1 May to 5th May</Text>
-              </View>
-              <View style={styles.innerListView}>
-                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                  <Image source={require('../../Images/profile.png')} style={styles.managerProfile} />
-                  <Text style={styles.leaveManager}>Manager</Text>
-                </View>
-                <Text style={styles.leaveManagerName}>John doe</Text>
-              </View>
-            </View>
-            {/* SINGLE LEAVE---------------------- */}
 
-
-            {/* SINGLE LEAVE---------------------- */}
-            <View style={styles.leavesList}>
-              <View style={styles.innerListView}>
-                <Text style={styles.idNumber}>ID: 95 259105</Text>
-              </View>
-              <View style={styles.innerListView}>
-                <Text style={styles.leaveReason}>Going for a trip</Text>
-                <Text style={styles.leaveStatus}>Pending</Text>
-              </View>
-              <View style={styles.innerListView}>
-                <Text style={styles.leaveType}>Casual Leave</Text>
-                <Text></Text>
-              </View>
-              <View style={styles.innerListView}>
-                <Text style={styles.leaveForm}><MaterialCommunityIcons name="file-document-edit-outline" size={width * 0.06} color="#565252" /> Leave Form</Text>
-                <Text style={styles.leaveDates}>1 May to 5th May</Text>
-              </View>
-              <View style={styles.innerListView}>
-                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                  <Image source={require('../../Images/profile.png')} style={styles.managerProfile} />
-                  <Text style={styles.leaveManager}>Manager</Text>
-                </View>
-                <Text style={styles.leaveManagerName}>John doe</Text>
-              </View>
-            </View>
-            {/* SINGLE LEAVE---------------------- */}
-          </View>
-          {/* LIST OF LEAVES-------------------- */}
-        </ScrollView>
+        <FlatList
+          data={leaveData}
+          keyExtractor={(item) => item.id}
+          renderItem={renderLeaveData}
+          showsVerticalScrollIndicator={false}
+        />
       </View>
+      <Loader visible={loading} />
     </View>
   )
 }
@@ -125,7 +107,7 @@ const styles = StyleSheet.create({
     paddingTop: 7,
     borderTopRightRadius: 30,
     borderTopLeftRadius: 30,
-    marginTop: 70,
+    marginTop: 50,
     flex: 1
 
   },
@@ -157,6 +139,7 @@ const styles = StyleSheet.create({
   },
   newLeaveBtnView: {
     alignSelf: 'flex-end',
+    marginBottom:20
   },
   newLeaveBtn: {
     backgroundColor: '#49AA67',
@@ -235,13 +218,13 @@ const styles = StyleSheet.create({
   managerProfile: {
     height: width * 0.1,
     width: width * 0.1,
+    borderRadius:width * 0.05,
     marginRight: 10,
   },
   leaveManager: {
     color: '#656565',
     fontWeight: '600',
     fontSize: width * 0.037,
-    // marginRight: 20
   },
 
   leaveManagerName: {

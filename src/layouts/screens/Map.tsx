@@ -1,76 +1,148 @@
 import { StyleSheet, Text, View, Dimensions, TouchableOpacity } from 'react-native'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import MapView, { PROVIDER_GOOGLE, Marker, Polyline } from 'react-native-maps'
 import IonIcon from 'react-native-vector-icons/Ionicons';
+import { getMethod, postMethod } from '../../utils/helper';
+import Loader from '../../component/Loader';
+import Snackbar from 'react-native-snackbar';
 
 
 const { width, height } = Dimensions.get('window');
 
-const Map = () => {
+const Map = ({ route, navigation }) => {
+    const data = route.params;
 
-    const mapRef = useRef();
+
+
+    const [loading, setLoading] = useState(false)
+    const [orderData, setOrderData] = useState([])
+    const mapRef = useRef(null);
+    const [deliveryCoordinates, setDeliveryCoordinates] = useState({ latitude: 0, longitude: 0 });
+    console.log('deliveryCoordinates', deliveryCoordinates);
+
+
+    useEffect(() => {
+        getOrderData()
+    }, [])
+
+    const getOrderData = async () => {
+        try {
+            setLoading(true);
+            const requestData = {
+                order_id: data.data.order_id
+            };
+            const api = await postMethod(`api/order`, requestData);
+            if (api.status === 200) {
+                setOrderData(api.data.data);
+                // console.log('api.data.data',api?.data.data);
+
+                setDeliveryCoordinates({
+                    latitude: parseFloat(api?.data.data.latitude),
+                    longitude: parseFloat(api?.data.data.longitude)
+                });
+                setLoading(false);
+                // Call fetchCoordinates immediately after setting orderData
+            } else {
+                console.log('Error in status code of order', api.data.message);
+                setLoading(false);
+            }
+        } catch (error) {
+            console.log('Error in order API', error);
+            setLoading(false);
+        }
+    };
+
+
+    const handleDeclineBtn = async () => {
+        try {
+            setLoading(true)
+            const requestBody = {
+                order_id: data.data.order_id
+            }
+            const api: any = await postMethod(`api/decline-order`, requestBody)
+            if (api.status == 200) {
+                Snackbar.show({
+                    text: 'You have Decline The Order',
+                    duration: Snackbar.LENGTH_SHORT,
+                    textColor: '#AE1717',
+                    backgroundColor: '#F2A6A6',
+                });
+                navigation.navigate('Notification')
+                setLoading(false)
+            } else {
+                console.log('error while api status in package summary', api.data.message);
+                setLoading(false)
+            }
+
+        } catch (error) {
+            console.log('error', error);
+            setLoading(false)
+        }
+    }
+
+
+    const handleAceeptBtn = async () => {
+        try {
+            setLoading(true)
+            const requestBody = {
+                order_id: data.data.order_id
+            }
+            const api: any = await postMethod(`api/package-summary`, requestBody)
+            if (api.status == 200) {
+                navigation.navigate('PackageSummary', { orderData: api.data.data, orderId: data.data.order_id })
+                setLoading(false)
+            } else {
+                console.log('error while api status in package summary', api.data.message);
+                setLoading(false)
+            }
+
+        } catch (error) {
+            console.log('error', error);
+            setLoading(false)
+        }
+    }
+
     return (
         <View style={styles.container}>
             <View style={styles.mapView}>
-                <MapView ref={mapRef} zoomControlEnabled={true} showsMyLocationButton={true} provider={PROVIDER_GOOGLE} style={styles.map}
-                    region={{
-                        latitude: 37.78825,
-                        longitude: -122.4324,
-                        latitudeDelta: 0.015,
-                        longitudeDelta: 0.0121,
-                    }}
+                <MapView
+                    ref={mapRef}
+                    zoomControlEnabled={true}
+                    showsMyLocationButton={true}
+                    provider={PROVIDER_GOOGLE}
+                    style={styles.map}
+                // region={{
+                //     latitude: (pickupCoordinates.latitude + deliveryCoordinates.latitude) / 2,
+                //     longitude: (pickupCoordinates.longitude + deliveryCoordinates.longitude) / 2,
+                //     latitudeDelta: Math.abs(pickupCoordinates.latitude - deliveryCoordinates.latitude) * 1.5,
+                //     longitudeDelta: Math.abs(pickupCoordinates.longitude - deliveryCoordinates.longitude) * 1.5,
+                // }}
                 >
-                    {/* <Marker 
-                    // key={index} 
-                    // coordinate={coordinate} 
+                    <Marker
+                        coordinate={deliveryCoordinates}
+                        title="Drop-off Location"
                     />
-
-                    <Polyline
-                        // key={index}
-                        // coordinates={polylineCoordinates}
-                        strokeColor="red"
-                        strokeWidth={2}
-                    /> */}
                 </MapView>
             </View>
             <View style={styles.pickDrop}>
-                <View style={styles.details}>
-                    <View style={styles.pick}>
-                        <Text style={styles.pickText}>PICK UP</Text>
-                        <Text style={styles.pickName}>Woltar</Text>
-                        <Text style={styles.address}>Ravindra chowk,sector
-                            no.5Chandigarh</Text>
-                    </View>
 
-                    <View style={{ alignSelf: 'center',paddingHorizontal:8, }}>
-                        <IonIcon name="arrow-forward" color={'grey'} size={width * 0.08} style={styles.icon} />
-                    </View>
-                    <View style={styles.drop}>
-                        <Text style={styles.pickText}>DROP OFF</Text>
-                        <Text style={styles.pickName}>Mary smith</Text>
-                        <Text style={styles.address}>Gopan nagar,sector
-                            no. 45 Chandigarh</Text>
-                    </View>
+                <View>
+                    <Text style={styles.deliveryHeading}>Delivery Address</Text>
+                    <Text style={styles.deliveryText}>{orderData?.drop_off}</Text>
                 </View>
-                <View style={styles.priceDetails}>
-                    <View>
-                        <Text style={styles.priceHeadText}>Delivery Fee</Text>
-                        <Text style={styles.priceText}>$12,200</Text>
-                    </View>
-                    <View>
-                        <Text style={styles.priceHeadText}>Total Distance</Text>
-                        <Text style={styles.priceText}>6.2km</Text>
-                    </View>
-                    <View>
-                        <Text style={styles.priceHeadText}>Payment code</Text>
-                        <Text style={styles.priceText}>000</Text>
-                    </View>
-                </View>
+
                 <View style={styles.btns}>
-                    <TouchableOpacity style={styles.btnDecline}><Text style={styles.btnDeclineText}>Decline</Text></TouchableOpacity>
-                    <TouchableOpacity style={styles.btnAccept}><Text style={styles.btnAcceptText}>Accept</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.btnDecline} onPress={handleDeclineBtn}>
+                        <Text style={styles.btnDeclineText}>Decline</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.btnAccept} onPress={handleAceeptBtn}>
+                        <Text style={styles.btnAcceptText}>Accept</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
+
+            <Loader visible={loading} />
         </View>
     )
 }
@@ -85,88 +157,44 @@ const styles = StyleSheet.create({
     },
     mapView: {
         backgroundColor: 'lightgrey',
-        height: "60%",
+        height: "70%",
         // alignSelf: 'center',
     },
     map: {
         width: width * 1,
-        height: height * 0.7,
+        height: height * 0.8,
 
     },
     pickDrop: {
-        height: height * 0.3,
-        width: width * 0.8,
         backgroundColor: 'white',
         alignSelf: 'center',
-        padding: 10,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
         elevation: 5,
         shadowColor: 'black',
         shadowOffset: { width: 0, height: 2 },
-        // shadowOpacity: 0.8,
         shadowRadius: 4,
+        borderRadius: 5
     },
-    details: {
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'space-evenly',
-        borderBottomColor: '#888787',
-        borderBottomWidth: 0.5,
-        paddingBottom: 7,
+    deliveryHeading: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#363535',
+        textAlign: 'center',
+        marginBottom: 20
     },
-    icon: {
-        // alignSelf: 'flex-start',
-        alignSelf: 'center',
-
-    },
-    pick: {
-        width: '43%',
-    },
-    drop: {
-        width: '43%',
-    },
-    pickText: {
-        fontSize: width * 0.03,
-        color: 'black',
-        fontWeight: '600'
-        // backgroundColor:'red'
-    },
-
-    pickName: {
-        fontSize: width * 0.04,
-        fontWeight: '900',
-        color: '#777777',
-    },
-
-    address: {
-        color: '#888888',
-        fontSize: width * 0.03
-    },
-    priceDetails: {
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        padding: 7,
-        borderBottomColor: '#888787',
-        borderBottomWidth: 0.5,
-        paddingBottom: 7,
-    },
-    priceHeadText: {
-        color: '#9A9191',
-        fontSize: width * 0.035,
-        alignSelf: 'center',
-
-    },
-    priceText: {
-        color: '#9A9191',
-        fontSize: width * 0.03,
-        alignSelf: 'center',
-
+    deliveryText: {
+        color: '#888787',
+        fontSize: 15,
+        fontWeight: '500',
+        textAlign: 'center',
+        marginBottom: 20
     },
     btns: {
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-evenly',
-        padding: 5
+        marginTop: 20
     },
     btnDecline: {
         backgroundColor: '#F20000',
@@ -184,13 +212,13 @@ const styles = StyleSheet.create({
     },
     btnAcceptText: {
         color: '#4F4D4D',
-        fontSize: width * 0.03,
-
+        fontSize: width * 0.040,
+        fontWeight: '600'
     },
     btnDeclineText: {
         color: 'white',
-        fontSize: width * 0.03,
-
+        fontSize: width * 0.040,
+        fontWeight: '600'
     },
 
 

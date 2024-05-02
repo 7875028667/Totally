@@ -1,9 +1,16 @@
 import { StyleSheet, Text, View, Dimensions, Image } from 'react-native'
-import React from 'react'
+import React, { useEffect } from 'react'
 
 const { width, height } = Dimensions.get('window');
 
-const OrderCompleted = () => {
+
+
+const OrderCompleted = ({navigation}) => {
+    useEffect(() =>{
+        setTimeout(() =>{
+            navigation.navigate('DrawerNavigator')
+        },5000)
+    },[])
     return (
         <View style={styles.container}>
             {/* <Text>OrderCompleted</Text> */}

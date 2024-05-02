@@ -25,6 +25,9 @@ import TabNavigator from './bottomNav/TabNavigator';
 import { getStorageData } from '../../utils/helper';
 import { set } from 'react-hook-form';
 import Loader from '../../component/Loader';
+import Timesheet from '../screens/Timesheet';
+import Delivery from '../screens/Delivery';
+import OrderHistory from '../screens/OrderHistory';
 
 
 
@@ -37,15 +40,15 @@ const AppNavigation = () => {
 
     const [auth, setAuth] = useState('')
     const [load, setLoad] = useState(false)
-    console.log('auth',auth);
 
-
+  
     useEffect(() => {
       setLoad(true)
         const fetchData = async () => {
           try {
             const getData = await getStorageData();
             setAuth(getData.data.token);
+            console.log(getData.data.token);
             setLoad(false)
             console.log('auth',auth);
           } catch (error) {
@@ -86,7 +89,9 @@ const AppNavigation = () => {
             <Stack.Screen name="Notification" component={Notification} />
             <Stack.Screen name="Map" component={Map} />
             <Stack.Screen name="OrderCompleted" component={OrderCompleted} />
-            {/* <Stack.Screen name="TabNavigator" component={TabNavigator} /> */}
+            <Stack.Screen name='Timesheet' component={Timesheet} />
+            <Stack.Screen name='Delivery' component={Delivery} />
+            <Stack.Screen name='OrderHistory' component={OrderHistory} />
         </Stack.Navigator>
       ):
       <Loader visible={load} />

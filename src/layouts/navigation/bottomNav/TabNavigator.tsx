@@ -1,12 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-
 import HistoryAndTask from '../../screens/HistoryAndTask'
-import ProfileDetails from '../../screens/ProfileDetails'
 import Icon from 'react-native-vector-icons/Ionicons';
-import NewLeave from '../../screens/NewLeave'
 import Profile from '../../screens/Profile'
+import Delivery from '../../screens/Delivery'
 
 
 const Tab = createBottomTabNavigator();
@@ -16,7 +14,7 @@ const TabNavigator = () => {
         <Tab.Navigator
             screenOptions={{
                 headerShown: false,
-                tabBarStyle: { backgroundColor: '#49AA67', }
+                tabBarStyle: { backgroundColor: 'green' }
             }}
         >
             <Tab.Screen name="HistoryAndTask"
@@ -25,19 +23,23 @@ const TabNavigator = () => {
                     tabBarLabel: '',
                     headerShown: false,
                     tabBarIcon: ({ focused }) => (
-                        <Icon name="home" color={focused ? '#ffff' : '#d3d3d3'} size={24} />
-                    )
+                        <View style={{ marginTop: 10 }}>
+                            <Icon name="home" color={focused ? '#ffff' : '#d3d3d3'} size={24} />
+                        </View>
+                    ),
                 }}
             />
 
-            <Tab.Screen name="NewLeave"
-                component={NewLeave}
+            <Tab.Screen name="Delivery"
+                component={Delivery}
                 options={{
                     tabBarLabel: '',
                     headerShown: false,
                     tabBarIcon: ({ focused }) => (
-                        <Icon name="arrow-up-circle" color={focused ? '#ffff' : '#d3d3d3'} size={30} />
-                    )
+                        <View style={{ marginTop: 10 }}>
+                            <Icon name="arrow-up-circle" color={focused ? '#ffff' : '#d3d3d3'} size={25} />
+                        </View>
+                    ),
                 }}
             />
 
@@ -48,8 +50,10 @@ const TabNavigator = () => {
                     tabBarLabel: '',
                     headerShown: false,
                     tabBarIcon: ({ focused }) => (
-                        <Icon name="person" color={focused ? '#ffff' : '#d3d3d3'} size={24} />
-                    )
+                        <View style={{ marginTop: 10, }}>
+                            <Icon name="person" color={focused ? '#ffff' : '#d3d3d3'} size={24} />
+                        </View>
+                    ),
                 }}
             />
 

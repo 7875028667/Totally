@@ -33,8 +33,9 @@ const LoginScreen: FC<Props> = () => {
         }
         
         try {
-            // setLoading(true);
+            
             const api: any = await postMethod(`api/login`, raw);
+            // console.log('login',api);
             
             if (api.data.status === true) {
                 // setLoading(false);
@@ -45,7 +46,7 @@ const LoginScreen: FC<Props> = () => {
                     textColor: 'white',
                     backgroundColor: 'green',
                 });
-                navigation.navigate('DrawerNavigator')
+                navigation.replace('DrawerNavigator')
             } else {
                 // setLoading(false);
                 Snackbar.show({
@@ -60,6 +61,13 @@ const LoginScreen: FC<Props> = () => {
         }
         catch (e) {
             console.log('catch error', e);
+            Snackbar.show({
+                text: 'Something Went Wrong Please Try Again',
+                duration: Snackbar.LENGTH_LONG,
+                textColor: '#AE1717',
+                backgroundColor: '#F2A6A6',
+            });
+
         }
     }
 
@@ -185,12 +193,12 @@ const LoginScreen: FC<Props> = () => {
                         <Text style={styles.signBtnText}>Log In</Text>
                     </TouchableOpacity>
 
-                    <View>
+                    {/* <View>
                         <Text style={{ marginTop: '3%', color: 'black' }}>
                             New user ?{' '}
                             <Text style={{ fontWeight: 'bold', color: '#49AA67' }}>Register</Text>
                         </Text>
-                    </View>
+                    </View> */}
                 </View>
             </ImageBackground>
             {/* <Loader visible={isLoading} /> */}

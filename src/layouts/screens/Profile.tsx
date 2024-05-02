@@ -31,7 +31,8 @@ const Profile = ({ navigation }: any) => {
         setLoading(true)
         try {
             const api: any = await getMethod(`api/user-profile`);
-
+            // console.log('api,api',api.data);
+            
             if (api.status === 200) {
                 setLoading(false)
                 setProfileData(api.data.data.user)
@@ -74,9 +75,9 @@ const Profile = ({ navigation }: any) => {
                 </View>
             </Pressable>
             <ScrollView  >
-                <View>
+                {/* <View>
                     <View>
-                        <Text style={{ color: '#4F4D4D', fontWeight: 'bold', alignSelf: 'center', marginTop: height * 0.07, fontSize: width * 0.06 }}>{profileData?.first_name}</Text>
+                        <Text style={{ color: '#4F4D4D', fontWeight: 'bold', alignSelf: 'center', marginTop: height * 0.04, fontSize: width * 0.06 }}>{profileData?.first_name}</Text>
                     </View>
                     <View style={styles.deliveryData}>
                         <View style={styles.deliveryInnerData}>
@@ -88,9 +89,9 @@ const Profile = ({ navigation }: any) => {
                             <Text style={styles.text}>Month</Text>
                         </View>
                     </View>
-                </View>
-                <View style={{ marginTop: 20, width: '84%', marginLeft: '8%', }}>
-                    <View style={styles.div}>
+                </View> */}
+                <View style={{ marginTop: 50, width: '84%', marginLeft: '8%'}}>
+                    <Pressable style={styles.div} onPress={() => navigation.navigate('ProfileDetails',{ ufirst_name: profileData.first_name, uemail: profileData.email, ucountry: profileData.country, uphone: profileData.phone, uaddress: profileData.address, uprofileImg: profileData.profile_img })}>
                         <View style={styles.iconView}>
                             <IonIcon name="person" color={'#49AA67'} size={width * 0.05} />
                         </View>
@@ -98,8 +99,8 @@ const Profile = ({ navigation }: any) => {
                             <Text style={styles.viewHead}>Your Details</Text>
                             <Text style={styles.viewData}>Name . Email . Phone number</Text>
                         </View>
-                    </View>
-                    <View style={styles.div}>
+                    </Pressable>
+                    {/* <View style={styles.div}>
                         <View style={styles.iconView}>
                             <IonIcon name="settings" color={'#49AA67'} size={width * 0.05} />
 
@@ -108,8 +109,8 @@ const Profile = ({ navigation }: any) => {
                             <Text style={styles.viewHead}>Settings</Text>
                             <Text style={styles.viewData}>Profile . Security . App</Text>
                         </View>
-                    </View>
-                    <View style={styles.div}>
+                    </View> */}
+                    <Pressable style={styles.div} onPress={() =>navigation.navigate('VehicleMaintenance')}>
                         <View style={styles.iconView}>
                             <Image source={require('../../Images/van.png')}
                                 style={styles.vanIcon}
@@ -119,8 +120,8 @@ const Profile = ({ navigation }: any) => {
                             <Text style={styles.viewHead}>Vehicle Maintainance</Text>
                             <Text style={styles.viewData}>Services</Text>
                         </View>
-                    </View>
-                    <View style={[styles.div, { marginBottom: 40 }]}>
+                    </Pressable>
+                    <Pressable style={[styles.div, { marginBottom: 40 }]} onPress={() => navigation.navigate('Notification')}>
                         <View style={styles.iconView}>
                             <IonIcon name="notifications" color={'#49AA67'} size={width * 0.055} />
                         </View>
@@ -128,7 +129,7 @@ const Profile = ({ navigation }: any) => {
                             <Text style={styles.viewHead}>Notification</Text>
                             <Text style={styles.viewData}>Delivery Status</Text>
                         </View>
-                    </View>
+                    </Pressable>
                 </View>
             </ScrollView>
             <Loader visible={loading} />

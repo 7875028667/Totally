@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Image, Dimensions, Button, ScrollView, TouchableOpacity, Platform, PermissionsAndroid, TextInput, } from 'react-native';
+import { StyleSheet, Text, View, Image, Dimensions, ScrollView, TouchableOpacity, Platform, PermissionsAndroid, TextInput, Alert, } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import Modal from 'react-native-modal';
 import Header from '../../component/Header';
 import { getMethod, postMethod } from '../../utils/helper';
 import Snackbar from 'react-native-snackbar';
@@ -24,10 +21,7 @@ const AddMaintenance = ({ navigation }: any) => {
     const [imageUri, setImageUri] = useState<string | null>(null);
     const [imageUris, setImageUris] = useState<string[]>([]);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
-
-
-
+    
     useEffect(() =>{
         getData()
     },[])
@@ -39,6 +33,8 @@ const AddMaintenance = ({ navigation }: any) => {
             if(api.status === 200){
                 setLoading(false)
                 setVehicleDetail(api.data.data.vehicle)
+                // console.log('api.data.data.vehicle',api.data.data.vehicle);
+                
             }else{
                 setLoading(false);
                 Snackbar.show({
@@ -73,6 +69,8 @@ const AddMaintenance = ({ navigation }: any) => {
 
             const api: any = await postMethod(`api/add-maintenance`, data);
             if (api.status === 200) {
+                console.log('api',api);
+                
                 setLoading(false)
                 Snackbar.show({
                     text: 'Submit Successfully',
@@ -141,27 +139,65 @@ const AddMaintenance = ({ navigation }: any) => {
 
         };
 
-        launchCamera(options, (response: ImagePickerResponse) => {
+        Alert.alert(
+            'Choose Image',
+            'Select the image from Camera / Gallery',
+            [
+                {
+                    text: 'Camera',
+                    onPress: () => launchCamera(options, handleImagePickerResponse),
+                },
+                {
+                    text: 'Gallery',
+                    onPress: () => launchImageLibrary(options, handleImagePickerResponse),
+                },
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+            ],
+            { cancelable: true }
+        );
 
-            if (response.didCancel) {
-                console.log('User cancelled');
-                setImageUri(null);
-            } else if (response.error) {
-                console.log('ImagePicker Error:', response.error);
-                setImageUri(null);
-            } else {
-                const source = response.assets[0].uri;
-                const newUris = [...imageUris, source];
-                setImageUri(source);
-                setImageUris(newUris);
+        // launchCamera(options, (response: ImagePickerResponse) => {
 
-                if (selectedImage === null) {
-                    setSelectedImage(source);
-                }
-            }
-        });
+        //     if (response.didCancel) {
+        //         console.log('User cancelled');
+        //         setImageUri(null);
+        //     } else if (response.error) {
+        //         console.log('ImagePicker Error:', response.error);
+        //         setImageUri(null);
+        //     } else {
+        //         const source = response.assets[0].uri;
+        //         const newUris = [...imageUris, source];
+        //         setImageUri(source);
+        //         setImageUris(newUris);
+
+        //         if (selectedImage === null) {
+        //             setSelectedImage(source);
+        //         }
+        //     }
+        // });
     };
 
+    const handleImagePickerResponse = (response) => {
+        if (response.didCancel) {
+            console.log('User cancelled');
+            setImageUri(null);
+        } else if (response.error) {
+            console.log('ImagePicker Error:', response.error);
+            setImageUri(null);
+        } else {
+            const source = response.assets[0].uri;
+            const newUris = [...imageUris, source];
+            setImageUri(source);
+            setImageUris(newUris);
+    
+            if (selectedImage === null) {
+                setSelectedImage(source);
+            }
+        }
+    };
 
 
     return (
@@ -174,7 +210,7 @@ const AddMaintenance = ({ navigation }: any) => {
                             <Text style={styles.vehicleDetailsTextOne}>Vehicle Details : </Text>
                         </View>
                         <View>
-                            <Image source={require('../../Images/truck.png')}
+                            <Image source={{uri:vehicleDetail?.image}}
                                 style={styles.vehicleImage} />
                             <Text style={{ color: 'grey', fontSize: width * 0.035, textAlign:'center' }}>{vehicleDetail.vehicle_modal}</Text>
                         </View>
@@ -208,19 +244,19 @@ const AddMaintenance = ({ navigation }: any) => {
                 <View style={styles.billDetail}>
                     <View style={styles.billDetailInner}>
                         <Text style={styles.billHead}>Bill Name : </Text>
-                        <TextInput placeholder='Enter Bill Name' value={billName} onChangeText={(text) => setBillName(text)} />
+                        <TextInput placeholder='Enter Bill Name' value={billName} onChangeText={(text) => setBillName(text)}  style={{color:'#000000', fontSize:16, fontWeight:'400'}}/>
                     </View>
                     <View style={styles.billDetailInner}>
                         <Text style={styles.billHead}>Bill Date : </Text>
-                        <TextInput placeholder='Enter Bill Date' value={billDate} onChangeText={(text) => setBillDate(text)} keyboardType='decimal-pad' />
+                        <TextInput placeholder='Enter Bill Date' value={billDate} onChangeText={(text) => setBillDate(text)} keyboardType='decimal-pad'  style={{color:'#000000', fontSize:16, fontWeight:'400'}}/>
                     </View>
                     <View style={styles.billDetailInner}>
                         <Text style={styles.billHead}>Bill Amount : </Text>
-                        <TextInput placeholder='Enter Bill Amount' value={billAmount} onChangeText={(text) => setBillAmount(text)} keyboardType='decimal-pad' />
+                        <TextInput placeholder='Enter Bill Amount' value={billAmount} onChangeText={(text) => setBillAmount(text)} keyboardType='decimal-pad' style={{color:'#000000', fontSize:16, fontWeight:'400'}}/>
                     </View>
                     <View style={styles.billDetailInner}>
                         <Text style={styles.billHead}>Bill Type : </Text>
-                        <TextInput placeholder='Enter Bill Type' value={billType} onChangeText={(text) => setBillType(text)} />
+                        <TextInput placeholder='Enter Bill Type' value={billType} onChangeText={(text) => setBillType(text)} style={{color:'#000000', fontSize:16, fontWeight:'400'}}/>
                     </View>
                 </View>
                 <View>

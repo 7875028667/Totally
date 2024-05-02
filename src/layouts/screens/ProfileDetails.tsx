@@ -60,8 +60,8 @@ const ProfileDetails = ({ navigation, route }: any) => {
         try {
 
             const api: any = await FormPostMethod(`api/update-profile`, formData);
+        //    console.log('api',api);
            
-            
             if (api.status === 200) {
                 setLoading(false);
                 const existingUserData = await getStorageData();                
@@ -86,7 +86,7 @@ const ProfileDetails = ({ navigation, route }: any) => {
                 
                 
                 setLoading(false)
-                navigation.dispatch(CommonActions.goBack())
+                navigation.navigate('DrawerNavigator')
 
             } else {
                 setLoading(false);
@@ -141,25 +141,64 @@ const ProfileDetails = ({ navigation, route }: any) => {
 
         };
 
-        launchCamera(options, (response: ImagePickerResponse) => {
+        Alert.alert(
+            'Choose Image',
+            'Select the image from Camera / Gallery',
+            [
+                {
+                    text: 'Camera',
+                    onPress: () => launchCamera(options, handleImagePickerResponse),
+                },
+                {
+                    text: 'Gallery',
+                    onPress: () => launchImageLibrary(options, handleImagePickerResponse),
+                },
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+            ],
+            { cancelable: true }
+        );
 
-            if (response.didCancel) {
-                console.log('User cancelled');
-                setImageUri(null);
-            } else if (response.error) {
-                console.log('ImagePicker Error:', response.error);
-                setImageUri(null);
-            } else {
-                const source = response.assets[0].uri;
-                const newUris = [...imageUris, source];
-                setImageUri(source);
-                setImageUris(newUris);
+        // launchCamera(options, (response: ImagePickerResponse) => {
 
-                if (selectedImage === null) {
-                    setSelectedImage(source);
-                }
+        //     if (response.didCancel) {
+        //         console.log('User cancelled');
+        //         setImageUri(null);
+        //     } else if (response.error) {
+        //         console.log('ImagePicker Error:', response.error);
+        //         setImageUri(null);
+        //     } else {
+        //         const source = response.assets[0].uri;
+        //         const newUris = [...imageUris, source];
+        //         setImageUri(source);
+        //         setImageUris(newUris);
+
+        //         if (selectedImage === null) {
+        //             setSelectedImage(source);
+        //         }
+        //     }
+        // });
+    };
+
+    const handleImagePickerResponse = (response) => {
+        if (response.didCancel) {
+            console.log('User cancelled');
+            setImageUri(null);
+        } else if (response.error) {
+            console.log('ImagePicker Error:', response.error);
+            setImageUri(null);
+        } else {
+            const source = response.assets[0].uri;
+            const newUris = [...imageUris, source];
+            setImageUri(source);
+            setImageUris(newUris);
+    
+            if (selectedImage === null) {
+                setSelectedImage(source);
             }
-        });
+        }
     };
 
     return (
@@ -232,27 +271,6 @@ const ProfileDetails = ({ navigation, route }: any) => {
                         <Text style={styles.signBtnText}>Save</Text>
                     </TouchableOpacity>
                 </View>
-
-                {/* <Modal isVisible={isModalVisible}>
-                    <View style={styles.popUp}>
-                        <View style={styles.crossBtn}>
-                            <View><Text> </Text></View>
-                            <TouchableOpacity onPress={toggleModal} >
-                                <Text style={{ color: 'grey', fontSize: width * 0.06, paddingBottom: 3 }}>X</Text>
-                            </TouchableOpacity>
-                        </View>
-                        <View style={styles.optionBtns}>
-                            <TouchableOpacity style={styles.optionS} onPress={openImageLibrary}>
-                                <MaterialIcons name="insert-photo" size={width * 0.1} color="#49AA67" />
-                                <Text>Library</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.optionS} onPress={openCamera}>
-                                <MaterialCommunityIcons name="camera" size={width * 0.1} color="#49AA67" />
-                                <Text>Camera</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </Modal> */}
             </ScrollView>
             <Loader visible={loading} />
         </View>
@@ -285,6 +303,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderRightWidth: 1,
     },
+    viewHead:{
+        color:'#363535',
+        fontSize:14,
+        fontWeight:'500'
+    },
     detailsView: {
         width: '70%',
         alignSelf: 'center',
@@ -292,7 +315,11 @@ const styles = StyleSheet.create({
         // justifyContent: 'center',
         alignItems: 'center',
         marginLeft: '2.5%',
-
+    },
+    viewData:{
+        color:'#363535',
+        fontWeight:'500',
+        fontSize:16
     },
     buttonsView: {
         display: 'flex',
@@ -317,44 +344,5 @@ const styles = StyleSheet.create({
         color: 'black',
         fontSize: width * 0.045,
         fontWeight: 'bold',
-    },
-    popUp: {
-        borderWidth: 1,
-        borderRadius: 10,
-        borderColor: '#49AA67',
-        backgroundColor: 'white',
-        width: width * 0.8,
-        padding: 10,
-        marginLeft: '5%'
-    },
-    crossBtn: {
-        width: '90%',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexDirection: 'row',
-        borderBottomWidth: 1,
-        borderBottomColor: 'lightgrey',
-        marginLeft: '5%',
-        marginBottom: 10,
-    },
-    optionBtns: {
-        display: 'flex',
-        justifyContent: 'space-evenly',
-        flexDirection: 'row',
-        marginBottom: 10,
-
-    },
-    optionS: {
-        width: '30%',
-        backgroundColor: 'white',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderRadius: 10,
-        borderColor: '#49AA67',
-        paddingTop: 7,
-        paddingBottom: 7
     },
 })

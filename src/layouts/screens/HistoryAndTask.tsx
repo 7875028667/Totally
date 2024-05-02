@@ -1,13 +1,10 @@
-import { StyleSheet, Text, View, Dimensions, Image, TouchableOpacity, TextInput, ScrollView } from 'react-native'
-import React, { useState, useRef, useEffect } from 'react';
+import { StyleSheet, Text, View, Dimensions, Image, TouchableOpacity } from 'react-native'
+import React, { useState } from 'react';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Icon from 'react-native-vector-icons/Feather';
-import DrawerNavigator from '../navigation/drawer/DrawerNavigator'
 import { DrawerActions } from '@react-navigation/native';
-import { NavigationContainer } from '@react-navigation/native';
-import { useNavigation } from '@react-navigation/native';
-import TabNavigator from '../navigation/bottomNav/TabNavigator';
+
 
 
 
@@ -38,7 +35,7 @@ const HistoryAndTask = ({ navigation }: any) => {
                             onPress={handleDrawer}
                         />
                     </TouchableOpacity>
-                    <View style={styles.searchView}>
+                    {/* <View style={styles.searchView}>
                         <TextInput
                             style={styles.viewData}
                             onChangeText={handleSearch}
@@ -50,20 +47,20 @@ const HistoryAndTask = ({ navigation }: any) => {
                                 style={styles.micIcon}
                             />
                         </TouchableOpacity>
-                    </View>
-                    <View style={{ width: '90%', marginLeft: '5%', }}>
+                    </View> */}
+                    <View style={{ width: '90%', marginLeft: '5%',marginTop:width * 0.18 }}>
                         <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-evenly', marginTop: height * 0.07 }}>
                             <View>
-                                <TouchableOpacity style={styles.historyBtn}>
+                                <TouchableOpacity style={styles.historyBtn} onPress={() => navigation.navigate('OrderHistory')}>
                                     <MaterialCommunityIcons name="history" color={"black"} size={60} />
                                 </TouchableOpacity>
-                                <Text style={{ alignSelf: 'center' }}>History</Text>
+                                <Text style={{ alignSelf: 'center',color:'#5E5D5D', fontSize:18, fontWeight:'500' }}>History</Text>
                             </View>
                             <View>
-                                <TouchableOpacity style={styles.taskBtn}>
+                                <TouchableOpacity style={styles.taskBtn} onPress={() => navigation.navigate('Delivery')}>
                                     <Icon name="check-circle" size={48} color="black" />
                                 </TouchableOpacity>
-                                <Text style={{ alignSelf: 'center' }}>Task</Text>
+                                <Text style={{ alignSelf: 'center',color:'#5E5D5D', fontSize:18, fontWeight:'500' }}>Task</Text>
                             </View>
                         </View>
                         <View style={styles.vmView}>
@@ -212,5 +209,6 @@ const styles = StyleSheet.create({
     maintenanceBtnText: {
         color: '#4F4D4D',
         fontWeight: '700',
+        fontSize:20
     },
 })

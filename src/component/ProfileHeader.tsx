@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View, Dimensions, TouchableOpacity, Image, Pressable } from 'react-native'
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import { getMethod } from '../utils/helper';
+import { getMethod, getStorageData } from '../utils/helper';
 import Loader from './Loader';
 
 
@@ -18,7 +18,7 @@ interface Props {
 
 const ProfileHeader: FC<Props> = ({ showBellIcon, title, showBackIcon, showCamera, onPress, image }) => {
     const navigation = useNavigation()
-    
+
 
     return (
         <View style={styles.headerBox}>
@@ -46,7 +46,7 @@ const ProfileHeader: FC<Props> = ({ showBellIcon, title, showBackIcon, showCamer
             <View style={styles.profilePic}>
                 {image ? (
                     <Image
-                        source={{ uri: image }} 
+                        source={{ uri: image }}
                         style={{ width: 120, height: 120, borderRadius: 60 }}
                     />
                 ) : (

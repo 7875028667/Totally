@@ -28,7 +28,9 @@ const CustomDrawer = (props:any) => {
   const goToProfile = () => {
     navigation.navigate('Profile');
   };
-
+  const goToDelivery = () => {
+    navigation.navigate('PackageSummary');
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: 'purple', height: height * 1.5 }}>
@@ -39,7 +41,7 @@ const CustomDrawer = (props:any) => {
         </View>
         <DrawerContentScrollView {...props}>
           {/* <DrawerItemList {...props} /> */}
-          <View style={{borderBottomColor:'white',borderBottomWidth:0.5, marginBottom:15,}}>
+          <View style={{borderBottomColor:'white',borderBottomWidth:0.5, marginBottom:15,marginTop:50}}>
             <DrawerItem
               label="Attendance"
               icon={() => (
@@ -101,14 +103,14 @@ const CustomDrawer = (props:any) => {
               labelStyle={styles.labelStyle}
             />
             <DrawerItem
-              label="settings"
+              label="Delivery Details"
               icon={() => (
                 <View style={styles.iconContainer}>
                   <Ionicons name="settings" size={width * 0.05} color="white" />
-                  <Text style={styles.iconText}>Settings</Text>
+                  <Text style={styles.iconText}>Delivery Details</Text>
                 </View>
               )}
-              onPress={goToAttendance}
+              onPress={goToDelivery}
               labelStyle={styles.labelStyle}
             />
           </View>
@@ -197,7 +199,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: width * 0.65
+    width: width * 0.60
   },
   personDetail: {
     display: 'flex',

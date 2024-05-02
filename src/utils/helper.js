@@ -30,8 +30,7 @@ export const postMethod = async (url, body) => {
         
         const setHeader = () => {
             if (StoredData !== null) {
-                console.log('StoredDataaaaa',StoredData.data.token);
-                return { Authorization: `Bearer ${StoredData.data.token}` };
+                return `Bearer ${StoredData.data.token}`
             }
         };
 
@@ -61,7 +60,6 @@ export const getMethod = async url => {
         
         const setHeader = () => {
             if (StoredData.token !== null) {
-                console.log('StoredData.data.token',StoredData.data.token);
                 return `Bearer ${StoredData.data.token}`;
 
             }

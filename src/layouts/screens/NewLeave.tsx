@@ -1,97 +1,143 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, Dimensions, TextInput, Button } from 'react-native'
-import React, { useState, useCallback } from 'react'
-import IonIcon from 'react-native-vector-icons/Ionicons';
-import { Picker } from '@react-native-picker/picker';
-import CalendarPicker from 'react-native-calendar-picker';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Dimensions, Pressable, TextInput, Button } from 'react-native'
+import React, { useState, useCallback, useEffect } from 'react'
 import { ScrollView } from 'react-native';
 import DocumentPicker from 'react-native-document-picker';
 import Header from '../../component/Header';
-import ProfileHeader from '../../component/ProfileHeader';
+import { Dropdown } from 'react-native-element-dropdown';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { getMethod, postMethod } from '../../utils/helper';
+import Loader from '../../component/Loader';
 
 
 
 
 const { width, height } = Dimensions.get('window');
+const dropDownData = [
+    { label: 'Item 1', value: '1' },
+    { label: 'Item 2', value: '2' },
+    { label: 'Item 3', value: '3' },
+    { label: 'Item 4', value: '4' },
+    { label: 'Item 5', value: '5' },
+    { label: 'Item 6', value: '6' },
+    { label: 'Item 7', value: '7' },
+    { label: 'Item 8', value: '8' },
+]
 
 const NewLeave = ({ navigation }: any) => {
-    // USESTATE FOR PICKER----------------
-
-    const [selectedValue, setSelectedValue] = useState('');
-    // USESTATE FOR PICKER ENDED----------------
-
-
-
-
-
-    // USESTATE FOR TEXTINPUT----------------
-    const [remark, setRemark] = useState('');
+    const [value, setValue] = useState(null);
+    const [loading, setLoading] = useState(false)
     const [leave, setLeave] = useState('');
-    const [startDate, setStartDate] = useState(null);
-    const [endDate, setEndDate] = useState(null);
+    const [leaveType, setLeaveType] = useState([])
+    const [isStartDatePickerVisible, setStartDatePickerVisibility] = useState(false);
+    const [startDate, setStartDate] = useState<string | null>(null);
+    const [isEndDatePickerVisible, setEndDatePickerVisibility] = useState(false);
+    const [endDate, setEndDate] = useState<string | null>(null);
+    const [selectedFile, setSelectedFile] = useState<string[] | null>(null)
+    const [remark, setRemark] = useState('');
 
+    useEffect(() => {
+        getLeaveType()
+    }, [])
 
-    const handleDateChange = (date, type) => {
-        if (type === 'START_DATE') {
-            setStartDate(date);
-        } else if (type === 'END_DATE') {
-            setEndDate(date);
+    const getLeaveType = async () => {
+        try {
+            setLoading(true)
+            const api: any = await getMethod(`api/leavet-type-list`)
+            setLeaveType(api.data.data.leaveType)
+            setLoading(false)
+        } catch (error) {
+            setLoading(false)
+            console.log('error',error);
         }
+    }
+
+
+    const showStartDatePicker = () => {
+        setStartDatePickerVisibility(true);
     };
 
+    const showEndDatePicker = () => {
+        setEndDatePickerVisibility(true);
+    };
 
+    const hideDatePicker = () => {
+        setStartDatePickerVisibility(false);
+        setEndDatePickerVisibility(false);
+    };
 
-    // USESTATE FOR TEXTINPUT ENDED----------------
+    const handleStartDateConfirm = (date: string) => {
+        setStartDatePickerVisibility(false);
+        setStartDate(date);
+    };
 
+    const handleEndDateConfirm = (date: string) => {
+        setEndDatePickerVisibility(false);
+        setEndDate(date);
+    }
 
-
-    // USESTATE FOR CALENDAR ----------------
-
-
-
-
-    // USESTATE FOR CALENDAR ENDED----------------
-
-
-
-    // USESTATE FOR DOCUMENT PICKER----------------
-
-
-    const [fileResponse, setFileResponse] = useState([]);
-
-    const handleDocumentSelection = useCallback(async () => {
+    const selectDocument = async () => {
         try {
-            const response = await DocumentPicker.pick({
-                presentationStyle: 'fullScreen',
+            const result = await DocumentPicker.pick({
+                type: [DocumentPicker.types.allFiles],
             });
-            setFileResponse(response);
-        } catch (err) {
-            console.warn(err);
+            setSelectedFile(result)
+        } catch (error) {
+            if (DocumentPicker.isCancel(error)) {
+                console.log('userCancel Image')
+            } else {
+                console.log('error', error)
+            }
         }
-    }, []);
+    }
 
 
+    const ApplyLeaveHandler = async() =>{
+        try {
+            setLoading(true)
+            const data = {
+                leave_type_id: value,
+                leave_reason: leave,
+                start_date: startDate,
+                end_date: endDate,
+                remark: remark,
+                attachment: selectedFile,
 
-    // USESTATE FOR DOCUMENT PICKER----------------
+            }
+            const api:any = await postMethod(`api/apply-leave`,data)
+            // console.log('apijdjfjdfbjd',api);
+            setLoading(false)
+        } catch (error) {
+            setLoading(false)
+            console.log('error',error);
+            
+        }
+    }
 
 
     return (
         <View style={{ backgroundColor: 'white', height: '100%' }}>
-            <ProfileHeader showBackIcon={true} title='New Leave' showBellIcon={true} />
+            <Header title='New Leave' showBellIcon={false} />
             <ScrollView>
                 <View style={styles.formView}>
                     <View style={styles.leaveTypeView}>
                         <Text style={styles.leaveType}>Leave Type</Text>
-                        <View style={styles.pickerContainer}>
-                            <Picker
-                                style={styles.leaveTypeOptions}
-                                selectedValue={selectedValue}
-                                onValueChange={(itemValue, itemIndex) => setSelectedValue(itemValue)}
-                            >
-                                <Picker.Item label="Leave Type" value="option1" style={styles.pickerItems} />
-                                <Picker.Item label="Option 2" value="option2" style={styles.pickerItems} />
-                                <Picker.Item label="Option 3" value="option3" style={styles.pickerItems} />
-                            </Picker>
-                        </View>
+                        <Pressable style={styles.pickerContainer}>
+                            <Dropdown
+                                placeholder='Leave Type'
+                                data={leaveType}
+                                placeholderStyle={styles.pickerItems}
+                                selectedTextStyle={styles.leaveTypeOptions}
+
+                                iconStyle={styles.dropDowniconStyle}
+                                maxHeight={300}
+                                labelField="type_name"
+                                valueField="leave_type_id"
+                                value={value}
+                                onChange={(item) => {
+                                    setValue(item.leave_type_id);
+                                }}
+                            />
+                        </Pressable>
                     </View>
                     <View style={styles.leaveTypeView}>
                         <Text style={styles.leaveType}>Leave Reason</Text>
@@ -105,77 +151,75 @@ const NewLeave = ({ navigation }: any) => {
                             />
                         </View>
 
-                        <View style={styles.dateWrite}>
-                            <View style={styles.startDateView}>
-                                <Text style={styles.dateHead}>Start Date</Text>
-                                <TextInput
-                                    style={styles.startDate}
-                                    onChangeText={(txt) => setStartDate(txt)}
-                                    value={startDate}
-                                    keyboardType="numeric"
-                                />
+                        <View style={styles.startAndEndDateContainer}>
+                            <View>
+                                <Text style={styles.leaveType}>Start Date</Text>
+                                <Pressable style={styles.startDateBox} onPress={showStartDatePicker}>
+                                    <Text style={styles.selectedDate}>{startDate ? startDate.toDateString() : 'Select Start Date'}</Text>
+                                </Pressable>
                             </View>
-                            <View style={styles.endDateView}>
-                                <Text style={styles.dateHead}>End Date</Text>
-                                <TextInput
-                                    style={styles.endDate}
-                                    onChangeText={(text) => setEndDate(text)}
-                                    value={endDate}
-                                    keyboardType="numeric"
-                                />
-                            </View>
-                        </View>
 
-                        <View style={styles.calendarContainer} >
-                            <CalendarPicker
-                                startFromMonday={true}
-                                allowRangeSelection={true}
-                                selectedStartDate={startDate}
-                                selectedEndDate={endDate}
-                                onDateChange={handleDateChange}
-                                width={width * 0.8} // Set the calendar width as needed
-                                height={width * 0.6}
+                            <View>
+                                <Text style={styles.leaveType} >End Date</Text>
+                                <Pressable style={styles.startDateBox} onPress={showEndDatePicker}>
+                                    <Text style={styles.selectedDate}>{endDate ? endDate.toDateString() : 'Select End Date'}</Text>
+                                </Pressable>
+                            </View>
+
+                            <DateTimePickerModal
+                                isVisible={isStartDatePickerVisible}
+                                mode="date"
+                                onConfirm={handleStartDateConfirm}
+                                onCancel={hideDatePicker}
+                            />
+                            <DateTimePickerModal
+                                isVisible={isEndDatePickerVisible}
+                                mode="date"
+                                onConfirm={handleEndDateConfirm}
+                                onCancel={hideDatePicker}
                             />
                         </View>
+
                         <View style={styles.leaveTypeView}>
                             <Text style={styles.leaveType}>Attachment</Text>
-                            <View style={styles.attachmentView}>
-                                <TouchableOpacity style={styles.attachmentButton} onPress={handleDocumentSelection} >
-                                    <Text style={styles.attachmentButtonText}>Select File</Text>
-                                </TouchableOpacity>
-                                {fileResponse.map((file, index) => (
-                                    <Text
-                                        key={index.toString()}
-                                        style={styles.uri}
-                                        numberOfLines={1}
-                                        ellipsizeMode={'middle'}>
-                                        {file?.uri}
-                                    </Text>
-                                ))}
-                            </View>
-                        </View>
-                        <View style={styles.leaveTypeView}>
-                            <Text style={styles.leaveType}>Remark</Text>
-                            <View>
-                                <TextInput
-                                    style={styles.textInput}
-                                    onChangeText={(txt) => setRemark(txt)}
-                                    placeholder='Remark'
-                                    multiline={true}
-                                    value={remark}
-                                    numberOfLines={4}
-                                />
-                            </View>
-                        </View>
 
+                            <View style={styles.attachmentView}>
+                                <Pressable style={styles.attachmentButton} onPress={() => selectDocument()}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <View style={styles.chooseyourfilebox}>
+                                            <Text numberOfLines={1}
+                                                ellipsizeMode="tail" style={styles.attachmentButtonText}>{selectedFile ? selectedFile[0].name : 'Choose File'}</Text>
+                                        </View>
+                                    </View>
+                                </Pressable>
+                                <Text style={styles.nofilechossenText}>{!selectedFile && 'No File Chosen'}</Text>
+
+                            </View>
+                            <Text style={{ fontSize: 12, fontFamily: 'Roboto', fontWeight: '600' }}>Upload files only: pdf,gif,png,jpg,jpeg</Text>
+                        </View>
                     </View>
+                    <View style={styles.leaveTypeView}>
+                        <Text style={styles.leaveType}>Remark</Text>
+                        <View>
+                            <TextInput
+                                style={styles.textInput}
+                                onChangeText={(txt) => setRemark(txt)}
+                                placeholder='Remark'
+                                multiline={true}
+                                value={remark}
+                                numberOfLines={4}
+                            />
+                        </View>
+                    </View>
+
                 </View>
                 <View>
-                    <TouchableOpacity style={styles.process}>
+                    <TouchableOpacity style={styles.process} onPress={ApplyLeaveHandler}>
                         <Text style={styles.processText}>Apply Leave</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
+            <Loader visible={loading} />
         </View>
     )
 }
@@ -185,7 +229,7 @@ export default NewLeave
 const styles = StyleSheet.create({
     formView: {
         backgroundColor: '#F5F5F5',
-        marginTop: '20%',
+        marginTop: '10%',
         marginBottom: 30,
         marginHorizontal: '5%',
         padding: 15,
@@ -206,18 +250,29 @@ const styles = StyleSheet.create({
         marginBottom: 5,
     },
     pickerContainer: {
+        backgroundColor: 'white',
+        paddingVertical: 3,
         borderWidth: 1.5,
         borderColor: '#DADADA',
     },
 
     leaveTypeOptions: {
         backgroundColor: 'white',
+        paddingHorizontal: 10,
+        fontSize: width * 0.035,
+        fontWeight: '600',
+        color: '#484A4B',
     },
     pickerItems: {
-        color: '#969393',
-        fontSize: width * 0.04,
-        paddingHorizontal: 0,  // Remove horizontal padding
-        paddingVertical: 0,
+        paddingHorizontal: 10,
+        fontSize: 14
+    },
+    dropDowniconStyle: {
+        width: 26,
+        height: 26,
+        backgroundColor: 'white',
+        borderRadius: 13,
+
     },
     textInput: {
         backgroundColor: 'white',
@@ -227,25 +282,30 @@ const styles = StyleSheet.create({
         borderColor: '#DADADA',
 
     },
-    dateWrite: {
-        display: 'flex',
+    startAndEndDateContainer: {
+        marginTop: 20,
         flexDirection: 'row',
-        marginTop: 50,
-        justifyContent: 'space-between',
+        justifyContent: 'space-between'
+    },
+    startDateText: {
+        fontSize: width * 0.03,
+        fontWeight: '600',
+        color: '#484A4B',
+    },
+    startDateBox: {
+        height: 30,
+        marginTop: 10,
+        borderWidth: 1,
+        borderColor: '#484A4B',
+        width: 130,
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    selectedDate: {
 
-    },
-    dateHead: {
-        color: '#484A4B', fontSize: width * 0.03, fontWeight: '600'
-    },
-    startDateView: {
-        width: '40%'
-    },
-    startDate: {
-        backgroundColor: 'white',
-        paddingLeft: 10,
-        paddingVertical: 0,
-        borderWidth: 1.5,
-        borderColor: '#DADADA',
+        fontSize: 14,
+        fontWeight: '400',
+        color: '#484A4B',
     },
     endDateView: {
         width: '40%'
@@ -269,19 +329,35 @@ const styles = StyleSheet.create({
 
     },
     attachmentView: {
-        display: 'flex', flexDirection: 'row',
+        flexDirection: 'row',
+        alignItems: 'center'
     },
     attachmentButton: {
-        alignSelf: 'flex-start',
-        marginRight: 5,
+        height: 30,
+        width: 120,
         backgroundColor: 'white',
-        paddingHorizontal: 6,
-        paddingVertical: 3,
+        justifyContent: 'center',
+        marginTop: 5,
         borderWidth: 0.5,
-        borderColor: '#BCBCBC'
+        borderColor: '#BCBCBC',
+        alignItems: 'center'
     },
+    chooseyourfilebox: {
+        textAlign: 'center',
+        color: 'black'
+    },
+    nofilechossenText: {
+        fontWeight: '400',
+        fontSize: 12,
+        color: 'black',
+        marginLeft: 20
+    },
+
     attachmentButtonText: {
-        color: '#969393'
+        color: 'black',
+        fontSize: 14,
+        fontWeight: '400',
+
     },
     uri: {
         width: '66%',
