@@ -1,9 +1,10 @@
 import { StyleSheet, Text, View, TouchableOpacity, Image, Dimensions, ScrollView, FlatList } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import Header from '../../component/Header';
 import { getMethod } from '../../utils/helper';
 import Loader from '../../component/Loader';
+import { useFocusEffect } from '@react-navigation/native';
 
 
 
@@ -13,16 +14,20 @@ const { width, height } = Dimensions.get('window');
 const VehicleMaintenance = ({ navigation }: any) => {
     const [loading, setLoading] = useState(false);
     const [vehicleMaintainceData, setvehicleMaintainceData] = useState([])
+    
+    useFocusEffect(
+        useCallback(() => {
+            getData()
+        }, [])
 
-    useEffect(() => {
-        getData()
-    }, [])
+    )
+
     const getData = async () => {
 
         try {
             setLoading(true)
             const api: any = await getMethod(`api/vehicle-maintenance`)
-            setvehicleMaintainceData(api.data.data.servicing)
+            setvehicleMaintainceData(api?.data?.data?.servicing)
             // console.log('api.data.data.servicing', api.data.data.servicing);
 
             setLoading(false)
@@ -65,6 +70,13 @@ const VehicleMaintenance = ({ navigation }: any) => {
                     keyExtractor={(item, index) => index}
                     renderItem={renderVehicleData}
                     // style={{marginBottom:50,}}
+                    ListEmptyComponent={() => {
+                        return(
+                          <View style={{flex:1,}}>
+                            <Text style={{textAlign:'center', marginTop: height / 5, fontSize:20, fontWeight:'600', color:'#000000'}}>Vehicle Maintenance Data Not Found</Text>
+                          </View>
+                        )
+                      }}
                 />
 
             </View>

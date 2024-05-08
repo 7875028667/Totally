@@ -5,7 +5,7 @@ import { getMethod } from '../../utils/helper';
 import Loader from '../../component/Loader';
 import { useFocusEffect } from '@react-navigation/native';
 
-const { width } = Dimensions.get('window');
+const { width,height } = Dimensions.get('window');
 
 const Delivery = ({ navigation }) => {
     const [loading, setLoading] = useState(false);
@@ -27,10 +27,8 @@ const Delivery = ({ navigation }) => {
         try {
             setLoading(true);
             const api = await getMethod('api/delivery');
-            if (api.status === 200) {
-                setDeliveryData(api.data.data.delivery);
-                // console.log('api.data.data.delivery',api.data.data.delivery);
-                
+            if (api?.status === 200) {
+                setDeliveryData(api?.data?.data?.delivery);
                 setLoading(false);
             } else {
                 console.log('error in api status delivery', api.data.message);
@@ -44,11 +42,11 @@ const Delivery = ({ navigation }) => {
 
     const filterData = () => {
         if (filterStatus === 1) {
-            return deliveryData.filter(item => [1, 2, 3].includes(item.delivery_status));
+            return deliveryData?.filter(item => [1, 2, 3].includes(item.delivery_status));
         } else if (filterStatus === 2) {
-            return deliveryData.filter(item => item.delivery_status === 4);
+            return deliveryData?.filter(item => item.delivery_status === 4);
         } else if (filterStatus === 3) {
-            return deliveryData.filter(item => item.delivery_status === 5);
+            return deliveryData?.filter(item => item.delivery_status === 5);
         } else {
             return deliveryData;
         }
@@ -101,26 +99,33 @@ const Delivery = ({ navigation }) => {
             </View>
         )
     );
-    
+
 
     return (
         <View style={styles.container}>
             <Header title="Delivery" showBellIcon={false} />
             <View style={styles.toptabbar}>
-                <Pressable onPress={() => setFilterStatus(1)} style={[styles.tabButton, { backgroundColor: filterStatus == '1' ? 'green' : null }]}>
-                    <Text style={[styles.deliveryTextBtn,{color:filterStatus =='1' ? 'white' : null}]}>Pending</Text>
+                <Pressable onPress={() => setFilterStatus(1)} style={[styles.tabButton, { backgroundColor: filterStatus == '1' ? '#49AA67' : null }]}>
+                    <Text style={[styles.deliveryTextBtn,]}>Pending</Text>
                 </Pressable>
-                <Pressable onPress={() => setFilterStatus(2)} style={[styles.tabButton, { backgroundColor: filterStatus == '2' ? 'green' : null }]}>
-                    <Text style={[styles.deliveryTextBtn,{color:filterStatus =='2' ? 'white' : null}]}>Completed</Text>
+                <Pressable onPress={() => setFilterStatus(2)} style={[styles.tabButton, { backgroundColor: filterStatus == '2' ? '#49AA67' : null }]}>
+                    <Text style={[styles.deliveryTextBtn,]}>Completed</Text>
                 </Pressable>
-                <Pressable onPress={() => setFilterStatus(3)} style={[styles.tabButton, { backgroundColor: filterStatus == '3' ? 'green' : null }]}>
-                    <Text style={[styles.deliveryTextBtn,{color:filterStatus =='3' ? 'white' : null}]}>Cancel</Text>
+                <Pressable onPress={() => setFilterStatus(3)} style={[styles.tabButton, { backgroundColor: filterStatus == '3' ? '#49AA67' : null }]}>
+                    <Text style={[styles.deliveryTextBtn,]}>Cancel</Text>
                 </Pressable>
             </View>
             <FlatList
                 data={filterData()}
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={renderItem}
+                ListEmptyComponent={() => {
+                    return (
+                        <View style={{ flex: 1, }}>
+                            <Text style={{ textAlign: 'center', marginTop: height / 5, fontSize: 22, fontWeight: '600', color: '#000000' }}>Data Not Found</Text>
+                        </View>
+                    )
+                }}
             />
             <Loader visible={loading} />
         </View>
@@ -161,7 +166,8 @@ const styles = StyleSheet.create({
     },
     packageDeliverySubText: {
         fontWeight: '600',
-        fontSize: width * 0.032
+        fontSize: width * 0.032,
+        color: '#000000'
     },
     packagesBox: {
         borderLeftWidth: 1,

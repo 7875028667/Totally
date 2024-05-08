@@ -7,6 +7,8 @@ import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { getMethod, postMethod } from '../../utils/helper';
 import Loader from '../../component/Loader';
+import moment from 'moment';
+import Snackbar from 'react-native-snackbar';
 
 
 
@@ -47,7 +49,7 @@ const NewLeave = ({ navigation }: any) => {
             setLoading(false)
         } catch (error) {
             setLoading(false)
-            console.log('error',error);
+            console.log('error leavet-type-list', error);
         }
     }
 
@@ -67,12 +69,14 @@ const NewLeave = ({ navigation }: any) => {
 
     const handleStartDateConfirm = (date: string) => {
         setStartDatePickerVisibility(false);
-        setStartDate(date);
+        const formattedDate = moment(date).format('YYYY-MM-DD');
+        setStartDate(formattedDate);
     };
 
     const handleEndDateConfirm = (date: string) => {
         setEndDatePickerVisibility(false);
-        setEndDate(date);
+        const formattedDate = moment(date).format('YYYY-MM-DD');
+        setEndDate(formattedDate);
     }
 
     const selectDocument = async () => {
@@ -91,7 +95,7 @@ const NewLeave = ({ navigation }: any) => {
     }
 
 
-    const ApplyLeaveHandler = async() =>{
+    const ApplyLeaveHandler = async () => {
         try {
             setLoading(true)
             const data = {
@@ -103,13 +107,28 @@ const NewLeave = ({ navigation }: any) => {
                 attachment: selectedFile,
 
             }
-            const api:any = await postMethod(`api/apply-leave`,data)
-            // console.log('apijdjfjdfbjd',api);
-            setLoading(false)
+          
+
+            const api: any = await postMethod(`api/apply-leave`, data)
+            // console.log('api', api);
+            if(api.status ===200){
+                Snackbar.show({
+                    text: 'Apply  Succesfully',
+                    duration: 4000,
+                    textColor: 'white',
+                    backgroundColor: 'green',
+                });
+                setLoading(false)
+                navigation.navigate('AllLeaves')
+            }else{
+                console.log('erroe in apply leave status');
+                setLoading(false)
+                
+            }
         } catch (error) {
             setLoading(false)
-            console.log('error',error);
-            
+            console.log('error in apply leave', error);
+
         }
     }
 
@@ -136,6 +155,8 @@ const NewLeave = ({ navigation }: any) => {
                                 onChange={(item) => {
                                     setValue(item.leave_type_id);
                                 }}
+                                itemTextStyle={{ color: 'black', fontSize: width * 0.040 }}
+
                             />
                         </Pressable>
                     </View>
@@ -155,15 +176,21 @@ const NewLeave = ({ navigation }: any) => {
                             <View>
                                 <Text style={styles.leaveType}>Start Date</Text>
                                 <Pressable style={styles.startDateBox} onPress={showStartDatePicker}>
-                                    <Text style={styles.selectedDate}>{startDate ? startDate.toDateString() : 'Select Start Date'}</Text>
+                                    <Text style={styles.selectedDate}>
+                                        {startDate ? moment(startDate).format('YYYY-MM-DD') : 'Select Start Date'}
+                                    </Text>
                                 </Pressable>
+
                             </View>
 
                             <View>
                                 <Text style={styles.leaveType} >End Date</Text>
                                 <Pressable style={styles.startDateBox} onPress={showEndDatePicker}>
-                                    <Text style={styles.selectedDate}>{endDate ? endDate.toDateString() : 'Select End Date'}</Text>
+                                    <Text style={styles.selectedDate}>
+                                        {endDate ? moment(endDate).format('YYYY-MM-DD') : 'Select End Date'}
+                                    </Text>
                                 </Pressable>
+
                             </View>
 
                             <DateTimePickerModal
@@ -195,7 +222,7 @@ const NewLeave = ({ navigation }: any) => {
                                 <Text style={styles.nofilechossenText}>{!selectedFile && 'No File Chosen'}</Text>
 
                             </View>
-                            <Text style={{ fontSize: 12, fontFamily: 'Roboto', fontWeight: '600' }}>Upload files only: pdf,gif,png,jpg,jpeg</Text>
+                            <Text style={{ fontSize: 12, fontFamily: 'Roboto', fontWeight: '600', color: '#000000' }}>Upload files only: pdf,gif,png,jpg,jpeg</Text>
                         </View>
                     </View>
                     <View style={styles.leaveTypeView}>
@@ -257,15 +284,16 @@ const styles = StyleSheet.create({
     },
 
     leaveTypeOptions: {
-        backgroundColor: 'white',
+        backgroundColor: '#ffffff',
         paddingHorizontal: 10,
         fontSize: width * 0.035,
         fontWeight: '600',
-        color: '#484A4B',
+        color: 'black',
     },
     pickerItems: {
         paddingHorizontal: 10,
-        fontSize: 14
+        fontSize: 14,
+        color: 'black'
     },
     dropDowniconStyle: {
         width: 26,
@@ -280,7 +308,8 @@ const styles = StyleSheet.create({
         paddingVertical: 5,
         borderWidth: 1.5,
         borderColor: '#DADADA',
-
+        color: '#000000',
+        fontSize: width * 0.040,
     },
     startAndEndDateContainer: {
         marginTop: 20,

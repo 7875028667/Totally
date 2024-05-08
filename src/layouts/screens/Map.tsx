@@ -34,14 +34,11 @@ const Map = ({ route, navigation }) => {
             const api = await postMethod(`api/order`, requestData);
             if (api.status === 200) {
                 setOrderData(api.data.data);
-                // console.log('api.data.data',api?.data.data);
-
                 setDeliveryCoordinates({
-                    latitude: parseFloat(api?.data.data.latitude),
-                    longitude: parseFloat(api?.data.data.longitude)
+                    latitude: parseFloat(api?.data?.data?.latitude),
+                    longitude: parseFloat(api?.data?.data?.longitude)
                 });
                 setLoading(false);
-                // Call fetchCoordinates immediately after setting orderData
             } else {
                 console.log('Error in status code of order', api.data.message);
                 setLoading(false);

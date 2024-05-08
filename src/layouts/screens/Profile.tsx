@@ -2,10 +2,11 @@ import { StyleSheet, Text, View, Dimensions, Image, TouchableOpacity, Pressable,
 import React, { useCallback, useEffect, useState } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import ProfileHeader from '../../component/ProfileHeader';
-import { getMethod } from '../../utils/helper';
+import { getMethod, postMethod } from '../../utils/helper';
 import { useFocusEffect } from '@react-navigation/native';
 import Loader from '../../component/Loader';
 import Snackbar from 'react-native-snackbar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
@@ -17,8 +18,8 @@ const { width, height } = Dimensions.get('window');
 const Profile = ({ navigation }: any) => {
     const [loading, setLoading] = useState(false);
     const [profileData, setProfileData] = useState([])
-    
-    
+
+
 
     useFocusEffect(
         useCallback(() => {
@@ -28,14 +29,13 @@ const Profile = ({ navigation }: any) => {
     )
 
     const getData = async () => {
-        setLoading(true)
+
         try {
+            setLoading(true)
             const api: any = await getMethod(`api/user-profile`);
-            // console.log('api,api',api.data);
-            
             if (api.status === 200) {
-                setLoading(false)
                 setProfileData(api.data.data.user)
+                setLoading(false)
             } else {
                 setLoading(false);
                 Snackbar.show({
@@ -57,6 +57,35 @@ const Profile = ({ navigation }: any) => {
 
     }
 
+    const handleLogout = async () => {
+        try {
+          const api: any = await postMethod(`api/logout`);
+          if (api.status === 200) {
+            console.log("Logout", api.data);
+            await AsyncStorage.removeItem('user_data');
+            navigation.reset({
+              routes: [{ name: 'LoginScreen' }]
+            })
+          } else {
+            Snackbar.show({
+              text: api.data.message,
+              duration: Snackbar.LENGTH_SHORT,
+              textColor: '#AE1717',
+              backgroundColor: '#F2A6A6',
+            });
+          }
+        }
+        catch (e) {
+          Snackbar.show({
+            text: "Some Error Occured-" + e,
+            duration: Snackbar.LENGTH_SHORT,
+            textColor: '#AE1717',
+            backgroundColor: '#F2A6A6',
+          });
+        }
+    
+      }
+
     return (
         <View style={{ backgroundColor: 'white', height: height * 1 }}>
             <ProfileHeader
@@ -64,6 +93,7 @@ const Profile = ({ navigation }: any) => {
                 title={'Profile'}
                 showBellIcon={true}
                 image={profileData?.profile_img}
+                loading={loading}
 
             />
 
@@ -90,8 +120,8 @@ const Profile = ({ navigation }: any) => {
                         </View>
                     </View>
                 </View> */}
-                <View style={{ marginTop: 50, width: '84%', marginLeft: '8%'}}>
-                    <Pressable style={styles.div} onPress={() => navigation.navigate('ProfileDetails',{ ufirst_name: profileData.first_name, uemail: profileData.email, ucountry: profileData.country, uphone: profileData.phone, uaddress: profileData.address, uprofileImg: profileData.profile_img })}>
+                <View style={{ marginTop: 50, width: '84%', marginLeft: '8%' }}>
+                    <Pressable style={styles.div} onPress={() => navigation.navigate('ProfileDetails', { ufirst_name: profileData.first_name, uemail: profileData.email, ucountry: profileData.country, uphone: profileData.phone, uaddress: profileData.address, uprofileImg: profileData.profile_img })}>
                         <View style={styles.iconView}>
                             <IonIcon name="person" color={'#49AA67'} size={width * 0.05} />
                         </View>
@@ -110,24 +140,33 @@ const Profile = ({ navigation }: any) => {
                             <Text style={styles.viewData}>Profile . Security . App</Text>
                         </View>
                     </View> */}
-                    <Pressable style={styles.div} onPress={() =>navigation.navigate('VehicleMaintenance')}>
+                    <Pressable style={styles.div} onPress={() => navigation.navigate('VehicleMaintenance')}>
                         <View style={styles.iconView}>
                             <Image source={require('../../Images/van.png')}
                                 style={styles.vanIcon}
                             />
                         </View>
                         <View>
-                            <Text style={styles.viewHead}>Vehicle Maintainance</Text>
+                            <Text style={styles.viewHead}>Vehicle Maintenance</Text>
                             <Text style={styles.viewData}>Services</Text>
                         </View>
                     </Pressable>
-                    <Pressable style={[styles.div, { marginBottom: 40 }]} onPress={() => navigation.navigate('Notification')}>
+                    <Pressable style={[styles.div]} onPress={() => navigation.navigate('Notification')}>
                         <View style={styles.iconView}>
                             <IonIcon name="notifications" color={'#49AA67'} size={width * 0.055} />
                         </View>
                         <View>
                             <Text style={styles.viewHead}>Notification</Text>
                             <Text style={styles.viewData}>Delivery Status</Text>
+                        </View>
+                    </Pressable>
+
+                    <Pressable style={[styles.div]} onPress={handleLogout}>
+                        <View style={styles.iconView}>
+                            <IonIcon name="log-out" color={'#49AA67'} size={width * 0.055} />
+                        </View>
+                        <View>
+                            <Text style={styles.viewHead}>Logout</Text>
                         </View>
                     </Pressable>
                 </View>
@@ -191,13 +230,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         paddingHorizontal: 7,
         backgroundColor: 'white',
-        paddingVertical: 8,
         shadowColor: 'black',
         shadowOffset: { width: 2, height: 2 },
         shadowOpacity: 1,
         shadowRadius: 4,
         elevation: 4,
-        marginVertical: 10
+        marginVertical: 10,
+        height:50,
+        alignItems:'center'
     },
     iconView: {
         width: '20%',

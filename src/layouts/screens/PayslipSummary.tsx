@@ -4,6 +4,7 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import Header from '../../component/Header';
 import { getMethod } from '../../utils/helper';
+import Loader from '../../component/Loader';
 
 
 
@@ -13,27 +14,29 @@ const { width, height } = Dimensions.get('window');
 const PayslipSummary = ({ navigation }: any) => {
     const [loading, setLoading] = useState(false);
     const [paySlipData, setPaySlipData] = useState([]);
-    
 
-    useEffect(() =>{
+
+    useEffect(() => {
         getPaySlipData()
-    },[])
+    }, [])
 
     const getPaySlipData = async () => {
         try {
             setLoading(true)
             const api: any = await getMethod(`api/payslip`);
-            
-            
-            setPaySlipData(api.data.data.payslip)
+            // console.log(api.data.data.payslip);
+
+            setPaySlipData(api?.data?.data?.payslip)
             setLoading(false)
 
         } catch (error) {
             setLoading(false)
-            console.log('erroe',error);
-            
+            console.log('erroe', error);
+
         }
     }
+
+    const deductionPercentage = (paySlipData?.total_statutory_deductions / paySlipData?.gross_salary) * 100;
     return (
         <View style={{ backgroundColor: 'white', height: '100%', marginBottom: 20 }}>
             <Header showBellIcon={true} title='Payslip Summary' />
@@ -47,10 +50,20 @@ const PayslipSummary = ({ navigation }: any) => {
                                 <AnimatedCircularProgress
                                     size={150}
                                     width={10}
-                                    fill={35}
+                                    fill={deductionPercentage}
                                     tintColor="#F20000"
                                     onAnimationComplete={() => console.log('onAnimationComplete')}
-                                    backgroundColor="white" />
+                                    backgroundColor="white"
+                                >
+                                    {
+                                        (fill) => (
+                                            <View style={styles.innerCircle}>
+                                                <Text style={styles.grossSalary}>{paySlipData?.gross_salary}$</Text>
+                                                <Text style={styles.grossPayText}>Gross Pay</Text>
+                                            </View>
+                                        )
+                                    }
+                                </AnimatedCircularProgress>
                             </View>
                             <View style={styles.calculation}>
                                 <View style={styles.details}>
@@ -58,7 +71,7 @@ const PayslipSummary = ({ navigation }: any) => {
                                         <Text style={[styles.dot, { color: 'white' }]}>●</Text>
                                     </View>
                                     <View>
-                                        <Text style={styles.calculationText}>900$</Text>
+                                        <Text style={styles.calculationText}>{paySlipData?.basic_salary}$</Text>
                                         <Text style={styles.calculationText}>Earnings</Text>
                                     </View>
                                 </View>
@@ -78,27 +91,28 @@ const PayslipSummary = ({ navigation }: any) => {
                     <View style={{ padding: 15, marginTop: 30, marginBottom: 0, }}>
                         <Text style={{ color: '#000000', fontWeight: '600', }}>Earning Details</Text>
                     </View>
-                    
+
                     <View style={styles.salaryReadings}>
                         <View style={styles.salaryInnerView}>
                             <View style={styles.payHead}><Text style={styles.payHeadText}>Basic pay : </Text></View>
-                            <View><Text style={styles.payValueText}>{paySlipData.basic_salary}$</Text></View>
+                            <View><Text style={styles.payValueText}>{paySlipData?.basic_salary}$</Text></View>
                         </View>
-                        <View style={styles.salaryInnerView}>
+                        {/* <View style={styles.salaryInnerView}>
                             <View style={styles.payHead}><Text style={styles.payHeadText}>HRA : </Text></View>
                             <View><Text style={styles.payValueText}>1500$</Text></View>
+                        </View> */}
+                        <View style={styles.salaryInnerView}>
+                            <View style={styles.payHead}><Text style={styles.payHeadText}>Total Commissions : </Text></View>
+                            <View><Text style={styles.payValueText}>{paySlipData?.total_commissions}$</Text></View>
                         </View>
                         <View style={styles.salaryInnerView}>
-                            <View style={styles.payHead}><Text style={styles.payHeadText}>Other Allowance : </Text></View>
-                            <View><Text style={styles.payValueText}>{paySlipData.total_other_payments}$</Text></View>
-                        </View>
-                        <View style={styles.salaryInnerView}>
-                            <View style={styles.payHead}><Text style={styles.payHeadText}>SPL Allowance : </Text></View>
-                            <View><Text style={styles.payValueText}>1500$</Text></View>
+                            <View style={styles.payHead}><Text style={styles.payHeadText}>Total Allowance : </Text></View>
+                            <View><Text style={styles.payValueText}>{paySlipData?.total_allowances}$</Text></View>
                         </View>
                     </View>
                 </View>
             </ScrollView>
+            <Loader visible={loading} />
         </View>
     )
 }
@@ -122,7 +136,24 @@ const styles = StyleSheet.create({
         alignItems: 'center',
 
     },
-
+    innerCircle: {
+        position: 'absolute',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        height: '100%'
+    },
+    grossSalary: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: 'black',
+        paddingBottom:5
+    },
+    grossPayText:{
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: 'black',
+    },
     progressBarDetail: {
         marginTop: 30,
         marginBottom: 20,
@@ -173,7 +204,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         width: '90%',
         alignSelf: 'center',
-        paddingVertical:10
+        paddingVertical: 10
     },
     payHead: {
         width: '60%',

@@ -48,7 +48,6 @@ export const postMethod = async (url, body) => {
         }
     } catch (e) {
         console.log('postMethod error reason is =>', e);
-
         return e;
     }
 };

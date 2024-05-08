@@ -42,7 +42,7 @@ const LoginScreen: FC<Props> = () => {
                 await storeData(api.data)
                 Snackbar.show({
                     text: 'Login Succesfully',
-                    duration: Snackbar.LENGTH_SHORT,
+                    duration: Snackbar.LENGTH_LONG,
                     textColor: 'white',
                     backgroundColor: 'green',
                 });

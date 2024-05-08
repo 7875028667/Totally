@@ -9,6 +9,7 @@ import Loader from '../../component/Loader';
 import Snackbar from 'react-native-snackbar';
 import { useIsFocused } from '@react-navigation/native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const { width } = Dimensions.get('window');
@@ -23,14 +24,34 @@ const Attendance = ({ navigation }: any) => {
     const [loading, setLoading] = useState(false);
     const [currentLocation, setCurrentLocation] = useState<any>(false);
     const [useraddress, setuserAddress] = useState('')
-
+    const [attendanceid, setAttendanceid] = useState<number>()
+    console.log('attendanceid', attendanceid);
+    console.log('isPunchedIn',isPunchedIn);
+    
 
     useEffect(() => {
+        const loadAttendanceId = async () => {
+            try {
+                const storedAttendanceId = await AsyncStorage.getItem('attendanceId');
+                if (storedAttendanceId) {
+                    setAttendanceid(parseInt(storedAttendanceId, 10));
+                }
+            } catch (error) {
+                console.log('Error loading attendance id from AsyncStorage:', error);
+            }
+        };
+
         getLocationAsync();
         if (isFocused) {
+            loadAttendanceId();
             punchData();
         }
+
+        return () => {
+            // Cleanup function
+        };
     }, [isFocused]);
+
 
 
     const requestLocationPermission = async () => {
@@ -70,9 +91,9 @@ const Attendance = ({ navigation }: any) => {
                             .then((resp) => {
                                 const addressComponents = resp.data.results[0].address_components
                                 const address = `${addressComponents[1].long_name}, ${addressComponents[2].long_name}\n${addressComponents[addressComponents.length - 2].long_name} - ${addressComponents[addressComponents.length - 1].long_name}\n${addressComponents[addressComponents.length - 3].long_name}`;
-                                console.log('address', address);
+                                // console.log('address', address);
                                 setuserAddress(address)
-                                setLoading(false); 
+                                setLoading(false);
 
                             })
                             .catch((error) => {
@@ -95,17 +116,20 @@ const Attendance = ({ navigation }: any) => {
         })
     };
 
-    const punchData = async () => {
+    const punchData = async (attendanceid: number) => {
         try {
             setLoading(true)
             const api: any = await getMethod(`api/punch-status`)
+            // console.log('api punchData',api.data);
+
             if (api.status === 200) {
-                setIsPunchedIn(api?.data.data.is_punch)
+                setIsPunchedIn(api?.data?.data?.is_punch)
+                // setAttendanceid(attendanceid)
                 setLoading(false)
             } else {
+                console.log('error in punch status api', api.data);
                 setIsPunchedIn(false)
                 setLoading(false)
-
             }
         } catch (error) {
             console.log('error while punch data api call', error);
@@ -122,18 +146,18 @@ const Attendance = ({ navigation }: any) => {
             const longitude = currentLocation ? currentLocation.longitude : '';
             const formattedDate = moment(currentDate).format('DD-MM-YYYY');
             const formattedTime = moment(currentDate).format('HH:mm:ss');
-
-
             const requestbody = {
                 clock_in: formattedDateTime,
                 latitude: latitude,
                 longitude: longitude
             }
             const api: any = await postMethod(`api/clock-in`, requestbody);
-            // console.log('v',api);
+            console.log('clockv', api?.data);
+            console.log('api?.data?.data?.attendance_id', api?.data?.data?.attendance?.attendance_id);
 
             if (api.status === 200) {
-                punchData()
+                punchData(api?.data?.data?.attendance?.attendance_id)
+                setAttendanceid(api?.data?.data?.attendance?.attendance_id)
                 setIsPunchedIn(true)
                 setCurrentTime(formattedDate)
                 setCurrentDate(formattedTime)
@@ -143,13 +167,18 @@ const Attendance = ({ navigation }: any) => {
                     textColor: 'white',
                     backgroundColor: 'green',
                 });
+                const attendanceIdFromAPI = api?.data?.data?.attendance?.attendance_id;
+                if (attendanceIdFromAPI) {
+                    await AsyncStorage.setItem('attendanceId', attendanceIdFromAPI.toString()); // Save the attendanceid to AsyncStorage
+                    // setAttendanceid(attendanceIdFromAPI);
+                }
+                setLoading(false)
             } else {
                 console.log('api not work correctly');
-
                 Snackbar.show({
                     text: 'Problem While PunchIn',
                     duration: Snackbar.LENGTH_SHORT,
-                    textColor: 'white',
+                    textColor: 'black',
                     backgroundColor: 'red',
                 });
                 setLoading(false)
@@ -161,37 +190,57 @@ const Attendance = ({ navigation }: any) => {
     };
 
     const handlePunchOut = async () => {
+        if (attendanceid) {
+            try {
+                setLoading(true)
+                const currentDate = new Date();
+                const formattedDateTime = moment(currentDate).format('DD-MM-YYYY HH:mm:ss');
+                const latitude = currentLocation ? currentLocation.latitude : '';
+                const longitude = currentLocation ? currentLocation.longitude : '';
+                const formattedDate = moment(currentDate).format('DD-MM-YYYY');
+                const formattedTime = moment(currentDate).format('HH:mm:ss');
+                const punchoutdata = {
+                    clock_out: formattedDateTime,
+                    latitude: latitude,
+                    longitude: longitude,
+                    attendance_id: attendanceid
+                }
+                // console.log('punchoutdata', punchoutdata)
+                const api: any = await postMethod(`api/clock-out`, punchoutdata)
+                // console.log('apiiiiiout', api);
 
-        try {
-            setLoading(true)
-            const currentDate = new Date();
-            const formattedDateTime = moment(currentDate).format('DD-MM-YYYY HH:mm:ss');
-            const latitude = currentLocation ? currentLocation.latitude : '';
-            const longitude = currentLocation ? currentLocation.longitude : '';
-            const formattedDate = moment(currentDate).format('DD-MM-YYYY');
-            const formattedTime = moment(currentDate).format('HH:mm:ss');
+                if (api.status === 200) {
+                    setCurrentTime(formattedDate)
+                    setCurrentDate(formattedTime)
+                    Snackbar.show({
+                        text: 'Punch out Successfully',
+                        duration: Snackbar.LENGTH_SHORT,
+                        textColor: 'black',
+                        backgroundColor: 'green',
+                    });
+                    setIsPunchedIn(false)
+                    await AsyncStorage.removeItem('attendanceId');
+                    setLoading(false)
+                    console.log('out');
+                    
+                } else {
+                    console.log('api not work correctly');
+                    setLoading(false)
 
-            const punchoutdata = {
-                clock_out: formattedDateTime,
-                latitude: latitude,
-                longitude: longitude
-            }
-            const api: any = await postMethod(`api/clock-out`, punchoutdata)
-            if (api.status === 200) {
-                punchData()
-                setIsPunchedIn(false)
-                setCurrentTime(formattedDate)
-                setCurrentDate(formattedTime)
+                }
+
+            } catch (error) {
+                console.log('Error while punching in punch_out', error);
+                Snackbar.show({
+                    text: 'Problem While PunchIn',
+                    duration: Snackbar.LENGTH_SHORT,
+                    textColor: 'black',
+                    backgroundColor: 'red',
+                });
                 setLoading(false)
-            } else {
-                console.log('api not work correctly');
-                setLoading(false)
-
             }
-
-        } catch (error) {
-            console.log('Error while punching in punch_out', error);
-            setLoading(false)
+        } else {
+            console.log('Please Try Again');
 
         }
     }
@@ -207,9 +256,9 @@ const Attendance = ({ navigation }: any) => {
                 </View>
                 <View style={styles.liveAddress}>
                     <View>
-                        <View style={{flexDirection:'row', alignItems:'center', justifyContent:'center'}}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
                             <IonIcon name="location" color={'skyblue'} size={width * 0.06} style={styles.icon} />
-                            <Text style={[styles.addressText, { marginBottom: 10, paddingLeft:10 }]}>Live Location</Text>
+                            <Text style={[styles.addressText, { marginBottom: 10, paddingLeft: 10 }]}>Live Location</Text>
                         </View>
                         <Text style={styles.addressText}>{useraddress}</Text>
                         {/* <Text style={styles.addressText}>India</Text> */}
@@ -250,8 +299,8 @@ const styles = StyleSheet.create({
     addressText: {
         fontSize: width * 0.04,
         color: '#484A4B',
-        textAlign:'center',
-        fontWeight:'500'
+        textAlign: 'center',
+        fontWeight: '500'
     },
     liveAddress: {
         backgroundColor: '#F6F6F6',

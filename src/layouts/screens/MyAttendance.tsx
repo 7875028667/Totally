@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, ScrollView, FlatList, Dimensions, TouchableOpacity, Pressable } from 'react-native';
 import moment from 'moment';
 import Header from '../../component/Header';
@@ -10,11 +10,25 @@ const { width } = Dimensions.get('window');
 const MyAttendance = ({ navigation }: any) => {
   const [attendanceData, setAttendanceData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [highlightedMonth, setHighlightedMonth] = useState('April');
+  const [highlightedMonth, setHighlightedMonth] = useState(moment().format('MMMM'));
+  const monthScrollViewRef = useRef(null);
+  console.log('attendanceData',attendanceData);
+  
 
   useEffect(() => {
     getAttendanceData();
   }, [highlightedMonth]);
+
+  useEffect(() => {
+    // Scroll to the current month when the component mounts
+    scrollToCurrentMonth();
+  }, []);
+
+  const scrollToCurrentMonth = () => {
+    const currentMonthIndex = moment().month();
+    const offsetX = currentMonthIndex * width / 3; // Assuming 3 months are visible at a time
+    monthScrollViewRef.current.scrollTo({ x: offsetX, animated: true });
+  };
 
   const getAttendanceData = async () => {
     try {
@@ -22,16 +36,12 @@ const MyAttendance = ({ navigation }: any) => {
       const month = {
         selected_month: highlightedMonth
       }
-      // console.log('month', month);
-
-
       const api: any = await postMethod(`api/attendance`, month);
       if (api.status === 200) {
         setLoading(false)
       } else {
         console.log('something went wrong');
         setLoading(false)
-
       }
       const formattedData = api?.data.data.attendance.map(item => {
         const formattedDate = moment(item.attendance_date, 'DD-MM-YYYY').format('YYYY-MM-DD');
@@ -74,22 +84,15 @@ const MyAttendance = ({ navigation }: any) => {
     } catch (error) {
       console.log('error while handledate', error);
       setLoading(false)
-
-
     }
-
-  }
+  };
 
   const renderAttendanceItem = ({ item }) => {
-    // console.log('item', item);
-
     const formattedDate = moment(item.attendance_date, 'YYYY-MM-DD').format('DD-MM-YYYY');
     const parsedDate = moment(formattedDate, 'DD-MM-YYYY').format('DD');
     const parsedDateDay = moment(formattedDate, 'DD-MM-YYYY').format('ddd');
-
     const isToday = moment().format('DD-MM-YYYY') === formattedDate;
     return(
-
       <View style={styles.attendance}>
         <Pressable style={[styles.date,isToday && {backgroundColor:'#EBE206'}]} onPress={() => handleDate(formattedDate)}>
           <Text style={[styles.dateData, { textAlign: 'center' }]}>{parsedDate}</Text>
@@ -104,24 +107,26 @@ const MyAttendance = ({ navigation }: any) => {
           <Text style={styles.dateData}>{item.clock_out}</Text>
         </View>
       </View>
-
     )
   };
-
 
   return (
     <View style={{ backgroundColor: 'white', flex: 1 }}>
       {/* Header */}
       <Header title='My Attendance' showBellIcon={false} />
       <View style={{ paddingVertical: 10 }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          ref={monthScrollViewRef} // Reference for ScrollView
+        >
           {Array.from({ length: 12 }, (_, i) => moment().month(i).format('MMMM')).map((month, index) => (
             <TouchableOpacity
               key={index}
               style={[styles.monthItem, month === highlightedMonth && styles.highlightedMonth]}
               onPress={() => handleMonthPress(month)}
             >
-              <Text style={month === highlightedMonth && styles.highlightedMonthText}>{month}</Text>
+              <Text style={[styles.month, month === highlightedMonth && styles.highlightedMonthText]}>{month}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -129,12 +134,10 @@ const MyAttendance = ({ navigation }: any) => {
       <FlatList
         data={attendanceData}
         renderItem={renderAttendanceItem}
-        keyExtractor={(item, index) => index.toString()}
-
+        keyExtractor={(item) => item.id}
       />
       <Loader visible={loading} />
     </View>
-
   );
 };
 
@@ -181,14 +184,16 @@ const styles = StyleSheet.create({
     alignContent: 'center',
     textAlign: 'left',
   },
-  highlightedMonth: {
-
-  },
   highlightedMonthText: {
     fontWeight: '600',
     color: 'green',
     fontSize: 16
   },
+  month:{
+    fontWeight: '600',
+    color: '#000000',
+    fontSize: 16
+  }
 });
 
 export default MyAttendance;

@@ -1,15 +1,15 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { Provider as PaperProvider } from 'react-native-paper';
-import { CombinedDefaultTheme } from './src/utils/theme';
 import AppNavigation from "./src/layouts/navigation/AppNavigation";
-import SplashScreen from 'react-native-splash-screen'
+import SplashScreen from 'react-native-splash-screen';
+import { Appearance } from 'react-native';
 
 export default function App() {
     useEffect(()=>{
+        Appearance.setColorScheme('light')
         setTimeout(() =>{
             SplashScreen.hide()
-        },5000)
+        },3000)
     })
     return (
         <NavigationContainer>

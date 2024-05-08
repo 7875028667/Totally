@@ -6,7 +6,7 @@ import { FormPostMethod, getStorageData, storeData } from '../../utils/helper';
 import Snackbar from 'react-native-snackbar';
 import { CommonActions, useFocusEffect } from '@react-navigation/native';
 import Loader from '../../component/Loader';
-
+import { useForm, Controller } from "react-hook-form"
 
 
 const { width, height } = Dimensions.get('window');
@@ -22,9 +22,17 @@ const ProfileDetails = ({ navigation, route }: any) => {
     const [imageUris, setImageUris] = useState<string[]>([]);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const { ufirst_name, uemail, ucountry, uphone, uaddress, uprofileImg } = route.params;
-    
+    const { setValue, handleSubmit, control, reset, formState: { errors } } = useForm({
+        defaultValues: {
+            name: ufirst_name, // Set default values to profile data received from route.params
+            email: uemail,
+            mobileNo: uphone,
+            country: ucountry,
+            address: uaddress
+        }
+    });
 
-    
+
 
     const fetchUserDetails = async () => {
         setName(ufirst_name)
@@ -33,40 +41,49 @@ const ProfileDetails = ({ navigation, route }: any) => {
         setMobileNo(uphone)
         setAddress(uaddress)
         setImageUri(uprofileImg)
-        
+
     };
 
     useFocusEffect(
-        useCallback(() =>{
+        useCallback(() => {
             fetchUserDetails()
-        },[])
+        }, [])
     )
 
-    const handleSubmit = async () => {
-        setLoading(true)
 
-        const formData = new FormData();
-        formData.append('name',name);
-        formData.append('email',email);
-        formData.append('address',address);+
-        formData.append('country',country);
-        formData.append('phone',mobileNo)
-        formData.append('image',{
-            uri:imageUri,
-            type:'image/jpg',
-            name:'profile.jpg'
-        });
-        
+    const onSubmit = (data:any) => {
+        SaveDetail(data)
+    }
+
+
+    const SaveDetail = async (data:any) => {
+    console.log('adatat',data);
+    
         try {
+            setLoading(true)
+            const formData = new FormData();
+            formData.append('name', data?.name);
+            formData.append('email', data?.email);
+            formData.append('address', data?.address); +
+            formData.append('country', data?.country);
+            formData.append('phone', data?.mobileNo)
+            formData.append('image', {
+                uri: imageUri,
+                type: 'image/jpg',
+                name: 'profile.jpg'
+            });
+    
+            console.log('formData', formData);
+
 
             const api: any = await FormPostMethod(`api/update-profile`, formData);
-        //    console.log('api',api);
-           
+            // console.log('api', api);
+
             if (api.status === 200) {
                 setLoading(false);
-                const existingUserData = await getStorageData();                
-               
-               
+                const existingUserData = await getStorageData();
+
+
                 const updateUserDetails = {
                     ...existingUserData.data,
                     first_name: name,
@@ -74,7 +91,7 @@ const ProfileDetails = ({ navigation, route }: any) => {
                     phone: mobileNo,
                     country: country,
                     address: address,
-                    profile_img:imageUri || existingUserData.data.user.profile_img
+                    profile_img: imageUri || existingUserData.data.user.profile_img
 
                 }
 
@@ -83,8 +100,8 @@ const ProfileDetails = ({ navigation, route }: any) => {
                     user: updateUserDetails
                 }
                 await storeData(updaatedUserData);
-                
-                
+
+
                 setLoading(false)
                 navigation.navigate('DrawerNavigator')
 
@@ -160,26 +177,6 @@ const ProfileDetails = ({ navigation, route }: any) => {
             ],
             { cancelable: true }
         );
-
-        // launchCamera(options, (response: ImagePickerResponse) => {
-
-        //     if (response.didCancel) {
-        //         console.log('User cancelled');
-        //         setImageUri(null);
-        //     } else if (response.error) {
-        //         console.log('ImagePicker Error:', response.error);
-        //         setImageUri(null);
-        //     } else {
-        //         const source = response.assets[0].uri;
-        //         const newUris = [...imageUris, source];
-        //         setImageUri(source);
-        //         setImageUris(newUris);
-
-        //         if (selectedImage === null) {
-        //             setSelectedImage(source);
-        //         }
-        //     }
-        // });
     };
 
     const handleImagePickerResponse = (response) => {
@@ -194,7 +191,7 @@ const ProfileDetails = ({ navigation, route }: any) => {
             const newUris = [...imageUris, source];
             setImageUri(source);
             setImageUris(newUris);
-    
+
             if (selectedImage === null) {
                 setSelectedImage(source);
             }
@@ -203,7 +200,7 @@ const ProfileDetails = ({ navigation, route }: any) => {
 
     return (
         <View style={{ backgroundColor: 'white', height: height * 1 }}>
-            <ProfileHeader showBackIcon={true} showBellIcon={false} title='' showCamera={true} onPress={openCamera} image={imageUri}/>
+            <ProfileHeader showBackIcon={true} showBellIcon={false} title='' showCamera={true} onPress={openCamera} image={imageUri} />
 
             <ScrollView showsVerticalScrollIndicator={false} style={{ marginTop: '30%', }}>
                 <View style={styles.div}>
@@ -211,63 +208,161 @@ const ProfileDetails = ({ navigation, route }: any) => {
                         <Text style={styles.viewHead}>Name</Text>
                     </View>
                     <View style={styles.detailsView}>
-                        <TextInput
-                            style={[styles.viewData, { paddingVertical: 3 }]}
-                            onChangeText={(text) => setName(text)}
-                            value={name}
+                        <Controller
+                            control={control}
+                            rules={{ required: true }}
+                            name='name'
+                            render={({ field: { onChange, value } }) => (
+                                <TextInput
+                                    style={[styles.viewData, { paddingVertical: 3 }]}
+                                    onChangeText={(text) => onChange(text)}
+                                    value={value}
+                                />
+                            )}
                         />
                     </View>
+
                 </View>
+                {errors.email && errors.email.type === "required" && (
+                    <View>
+                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Name is required.</Text>
+                    </View>
+                )}
+
                 <View style={styles.div}>
                     <View style={styles.iconView}>
                         <Text style={styles.viewHead}>Email</Text>
                     </View>
                     <View style={styles.detailsView}>
-                        <TextInput
-                            style={[styles.viewData, { paddingVertical: 3 }]}
-                            onChangeText={(text) => setEmail(text)}
-                            value={email}
+                        <Controller
+                            control={control}
+                            name='email'
+                            rules={{
+                                required: true,
+                                pattern: /^[^@ ]+@[^@ ]+\.[^@ .]{2,}$/
+                            }}
+                            render={({ field: { onChange, value } }) => (
+                                <TextInput
+                                    style={[styles.viewData, { paddingVertical: 3 }]}
+                                    onChangeText={(text) => onChange(text)}
+                                    value={value}
+                                />
+                            )}
                         />
+
                     </View>
+
                 </View>
+                {errors.email && errors.email.type === "required" && (
+                    <View>
+                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Email is required.</Text>
+                    </View>
+                )}
+                {errors.email && errors.email.type === "pattern" && (
+                    <View >
+                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Email is not valid.</Text>
+                    </View>
+                )}
+
                 <View style={styles.div}>
                     <View style={styles.iconView}>
                         <Text style={styles.viewHead}>Mobile no.</Text>
                     </View>
                     <View style={styles.detailsView}>
-                        <TextInput
-                            style={[styles.viewData, { paddingVertical: 3 }]}
-                            onChangeText={(text) => setMobileNo(text)}
-                            value={mobileNo}
+                        <Controller
+                            control={control}
+                            name='mobileNo'
+                            rules={{
+                                required: true,
+                                maxLength: 10,
+                                pattern: /^[0-9]*$/
+                            }}
+                            render={({ field: { onChange, value } }) => (
+                                <TextInput
+                                    style={[styles.viewData, { paddingVertical: 3 }]}
+                                    onChangeText={(text) => onChange(text)}
+                                    value={value}
+                                />
+                            )}
                         />
                     </View>
                 </View>
+                {errors.mobileNo && errors.mobileNo.type === "required" && (
+                    <View >
+                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Mobile Number is required.</Text>
+                    </View>
+                )}
+                {errors.mobileNo && errors.mobileNo.type === "maxLength" && (
+                    <View >
+                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>
+                            Mobile Number should be  10 characters.
+                        </Text>
+                    </View>
+                )}
+                {errors.mobileNo && errors.mobileNo.type === "pattern" && (
+                    <View >
+                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Only Number is Accepted </Text>
+                    </View>
+                )}
+
                 <View style={styles.div}>
                     <View style={styles.iconView}>
                         <Text style={styles.viewHead}>Country</Text>
                     </View>
                     <View style={styles.detailsView}>
-                        <TextInput
-                            style={[styles.viewData, { paddingVertical: 3 }]}
-                            onChangeText={(text) => setCountry(text)}
-                            value={country}
+                        <Controller
+                            control={control}
+                            name='country'
+                            rules={{
+                                required: true,
+                            }}
+                            render={({ field: { onChange, value } }) => (
+                                <TextInput
+                                    style={[styles.viewData, { paddingVertical: 3 }]}
+                                    onChangeText={(text) => onChange(text)}
+                                    value={value}
+                                />
+                            )}
                         />
                     </View>
+
                 </View>
+                {errors.country && errors.country.type === "required" && (
+                    <View>
+                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Country Name is  required.</Text>
+                    </View>
+                )}
+
                 <View style={styles.div}>
                     <View style={styles.iconView}>
                         <Text style={styles.viewHead}>Address</Text>
                     </View>
                     <View style={styles.detailsView}>
-                        <TextInput
-                            style={[styles.viewData, { paddingVertical: 3 }]}
-                            onChangeText={(text) => setAddress(text)}
-                            value={address}
+                        <Controller
+                            control={control}
+                            name='address'
+                            rules={{
+                                required: true
+                            }}
+                            render={({ field: { onChange, value } }) => (
+                                <TextInput
+                                    style={[styles.viewData, { paddingVertical: 3 }]}
+                                    onChangeText={(text) => onChange(text)}
+                                    value={value}
+                                />
+                            )}
                         />
                     </View>
+
                 </View>
+                {errors.address && errors.address.type === "required" && (
+                    <View>
+                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Address is  required.</Text>
+                    </View>
+                )}
+
                 <View style={styles.buttonsView}>
-                    <TouchableOpacity style={styles.signBtn} onPress={handleSubmit}>
+                    <TouchableOpacity style={styles.signBtn} onPress={handleSubmit(onSubmit)}>
                         <Text style={styles.signBtnText}>Save</Text>
                     </TouchableOpacity>
                 </View>
@@ -303,10 +398,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderRightWidth: 1,
     },
-    viewHead:{
-        color:'#363535',
-        fontSize:14,
-        fontWeight:'500'
+    viewHead: {
+        color: '#363535',
+        fontSize: 14,
+        fontWeight: '500'
     },
     detailsView: {
         width: '70%',
@@ -316,10 +411,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginLeft: '2.5%',
     },
-    viewData:{
-        color:'#363535',
-        fontWeight:'500',
-        fontSize:16
+    viewData: {
+        color: '#363535',
+        fontWeight: '500',
+        fontSize: 16
     },
     buttonsView: {
         display: 'flex',

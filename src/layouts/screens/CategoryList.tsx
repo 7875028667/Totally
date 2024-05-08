@@ -59,6 +59,7 @@ const CategoryList = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        
         const response = await axios.get('http://ykpt.braincave.work/api/v2/products');
         setProductData(response.data.data);
       } catch (error) {

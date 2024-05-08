@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Icon from 'react-native-vector-icons/Feather';
-import { DrawerActions } from '@react-navigation/native';
+// import { DrawerActions } from '@react-navigation/native';
 
 
 
@@ -11,31 +11,15 @@ import { DrawerActions } from '@react-navigation/native';
 const { width, height } = Dimensions.get('window');
 
 const HistoryAndTask = ({ navigation }: any) => {
-
-    const [search, setSearch] = useState('');
-
-
-    const handleSearch = (text: React.SetStateAction<string>) => {
-        setSearch(text);
-    };
     
-    const handleDrawer = () => {
-        navigation.dispatch(DrawerActions.toggleDrawer());
-    };
-
-
-
     return (
         <View style={{ backgroundColor: 'pink', flex: 1 }}>
             <View style={{ backgroundColor: 'white', height: height * 1 }}>
                 <View style={{ backgroundColor: '#49AA67', height: height * 0.17, }}>
-                    <TouchableOpacity>
-                        <IonIcon name="menu" color={'white'} size={width * 0.07}
-                            style={styles.icon}
-                            onPress={handleDrawer}
-                        />
+                    <TouchableOpacity onPress={() => navigation.openDrawer()}>
+                        <IonIcon name="menu" color={'white'} size={width * 0.07} style={styles.icon}/>
                     </TouchableOpacity>
-                    {/* <View style={styles.searchView}>
+                    {/* <View style={styles.searchView}>,;;
                         <TextInput
                             style={styles.viewData}
                             onChangeText={handleSearch}

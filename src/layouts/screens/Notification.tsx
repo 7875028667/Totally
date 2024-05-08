@@ -48,7 +48,7 @@ const Notification = ({ navigation }: any) => {
           data={notificationData}
           keyExtractor={(item, index) => item?.order_id.toString()}
           renderItem={({ item }) => {
-            console.log('item',item);
+            // console.log('item',item);
             //onPress={() => navigation.navigate('Map', { data: item })}
             return (
               <Pressable style={styles.notificationBox} >
@@ -59,6 +59,13 @@ const Notification = ({ navigation }: any) => {
                         item?.order_status === 3 ? '#F20000' : ''
                 }]}>{item.message}</Text>
               </Pressable>
+            )
+          }}
+          ListEmptyComponent={() => {
+            return(
+              <View style={{flex:1,}}>
+                <Text style={{textAlign:'center', marginTop: height / 5, fontSize:20, fontWeight:'600', color:'#000000'}}>You Dont Have Any Notification</Text>
+              </View>
             )
           }}
         />

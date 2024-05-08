@@ -1,17 +1,42 @@
 import { StyleSheet, Text, View, Image, ImageBackground, Dimensions } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import { useNavigation } from '@react-navigation/native';
+import { getStorageData } from '../../../utils/helper';
+import Loader from '../../../component/Loader';
 
 
 const { width, height } = Dimensions.get('window');
 
-const CustomDrawer = (props:any) => {
+const CustomDrawer = (props: any) => {
 
-  const navigation = props.navigation  
+  const navigation = useNavigation();
+  const [userData, setUserData] = useState([]);
+  const [loading, setLoading] = useState(false)
+
+  // console.log(userData);
+
+
+  useEffect(() => {
+    getData()
+  }, [])
+
+  const getData = async () => {
+    try {
+      setLoading(true)
+      const userData = await getStorageData();
+      setUserData(userData.data.user)
+      setLoading(false)
+    } catch (error) {
+      console.log('error in getstorage data in custom drawer', error);
+      setLoading(false)
+    }
+
+  }
 
   const goToAttendance = () => {
     navigation.navigate('Attendance');
@@ -29,7 +54,7 @@ const CustomDrawer = (props:any) => {
     navigation.navigate('Profile');
   };
   const goToDelivery = () => {
-    navigation.navigate('PackageSummary');
+    navigation.navigate('Delivery');
   };
 
   return (
@@ -41,7 +66,7 @@ const CustomDrawer = (props:any) => {
         </View>
         <DrawerContentScrollView {...props}>
           {/* <DrawerItemList {...props} /> */}
-          <View style={{borderBottomColor:'white',borderBottomWidth:0.5, marginBottom:15,marginTop:50}}>
+          <View style={{ borderBottomColor: 'white', borderBottomWidth: 0.5, marginBottom: 15, marginTop: 50 }}>
             <DrawerItem
               label="Attendance"
               icon={() => (
@@ -106,7 +131,7 @@ const CustomDrawer = (props:any) => {
               label="Delivery Details"
               icon={() => (
                 <View style={styles.iconContainer}>
-                  <Ionicons name="settings" size={width * 0.05} color="white" />
+                  <Ionicons name="cart" size={width * 0.05} color="white" />
                   <Text style={styles.iconText}>Delivery Details</Text>
                 </View>
               )}
@@ -114,22 +139,26 @@ const CustomDrawer = (props:any) => {
               labelStyle={styles.labelStyle}
             />
           </View>
-          <View>
+          <View style={{marginTop:width * 0.2}}>
             <TouchableOpacity style={styles.logoutBtn}>
               <View>
-                <Image source={require('../../../Images/profile.png')}
-                  style={styles.profileImage} />
+                {userData?.profile_img ?
+                  <Image source={{ uri: userData?.profile_img }} style={styles.profileImage} />
+                  :
+                  <Image source={require('../../../Images/profile.png')} style={styles.profileImage} />
+                }
               </View>
               <View style={styles.personDetail}>
-                <Text style={styles.personName}>Wolter</Text>
-                <Text style={styles.personEmail}>wolter@1234gmail.com</Text>
+                <Text style={styles.personName}>{userData?.first_name}</Text>
+                <Text style={styles.personEmail}>{userData?.email}</Text>
               </View>
-              <View style={styles.threeDot}>
-                <Text style={{fontWeight:'900'}}>•••</Text>
-              </View>
+              {/* <View style={styles.threeDot}>
+                <Text style={{ fontWeight: '900' }}>•••</Text>
+              </View> */}
             </TouchableOpacity>
           </View>
         </DrawerContentScrollView>
+        <Loader visible={loading} />
       </ImageBackground>
     </View>
   )
@@ -190,7 +219,7 @@ const styles = StyleSheet.create({
     height: width * 0.1,
     resizeMode: 'cover',
     alignSelf: 'center',
-  },
+    borderRadius:width * 0.05  },
   logoutBtn: {
     backgroundColor: '#EBE206',
     paddingHorizontal: 15,
@@ -198,26 +227,30 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     display: 'flex',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    // justifyContent: 'space-between',
     width: width * 0.60
   },
   personDetail: {
     display: 'flex',
+    marginLeft:10
   },
   personName: {
-    fontSize: width * 0.04,
-    fontWeight:'700',
+    fontSize: 13,
+    fontWeight: '700',
+    color:'#000000'
   },
   personEmail: {
-    fontSize: width * 0.03
+    fontSize: 13,
+    fontWeight: '400',
+    color:'#000000'
 
   },
   threeDot: {
     display: 'flex',
     justifyContent: 'center',
   },
-  accText:{
-    color:'white',
-    fontSize:width*0.025
+  accText: {
+    color: 'white',
+    fontSize: width * 0.025
   }
 })

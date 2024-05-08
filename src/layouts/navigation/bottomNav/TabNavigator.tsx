@@ -14,7 +14,7 @@ const TabNavigator = () => {
         <Tab.Navigator
             screenOptions={{
                 headerShown: false,
-                tabBarStyle: { backgroundColor: 'green' }
+                tabBarStyle: { backgroundColor: '#49AA67' }
             }}
         >
             <Tab.Screen name="HistoryAndTask"

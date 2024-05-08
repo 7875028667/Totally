@@ -1,11 +1,12 @@
 import { StyleSheet, Text, View, Dimensions, Image, ScrollView, FlatList } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { TouchableOpacity } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Header from '../../component/Header';
 import { getMethod } from '../../utils/helper';
 import Loader from '../../component/Loader';
+import { useFocusEffect } from '@react-navigation/native';
 
 
 
@@ -16,36 +17,44 @@ const AllLeaves = ({ navigation }: any) => {
   const [leaveData, setLeaveData] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    getData()
-  }, [])
+  // console.log('leaveData',leaveData);
+  
+
+  useFocusEffect(
+    useCallback(() => {
+        getData()
+    }, [])
+
+)
 
   const getData = async () => {
-    setLoading(true)
+    
     try {
+      setLoading(true)
       const api: any = await getMethod(`api/leave-list`);
-      // console.log('api', api.data.data.leave);
-
+      // console.log('api',api);
+      
       if (api.status === 200) {
-        setLeaveData(api.data.data.leave)
+        setLeaveData(api?.data?.data?.leave)
         setLoading(false)
       }
       else {
-        console.log(api.data.message);
+        console.log('error in leavelist api status ',api.data.message);
+        setLoading(false)
       }
     } catch (error) {
       setLoading(false)
-      console.log('error', error);
+      console.log('error in leave list api', error);
     }
   }
 
-  const renderLeaveData = ({ item, index }) => {
+  const renderLeaveData = ({ item }) => {
     
     return (
       <View style={styles.leavesList}>
-        <View style={styles.innerListView}>
+        {/* <View style={styles.innerListView}>
           <Text style={styles.idNumber}>ID: {item.empId}</Text>
-        </View>
+        </View> */}
         <View style={styles.innerListView}>
           <Text style={styles.leaveReason}>{item.reason}</Text>
           <Text style={styles.leaveStatus}>{item.status === 1 ? 'Pending' : (item.status === 2 ? 'Approved' : 'Cancelled')}</Text>
@@ -83,9 +92,16 @@ const AllLeaves = ({ navigation }: any) => {
 
         <FlatList
           data={leaveData}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.leave_id}
           renderItem={renderLeaveData}
           showsVerticalScrollIndicator={false}
+          ListEmptyComponent={() => {
+            return(
+              <View style={{flex:1,}}>
+                <Text style={{textAlign:'center', marginTop: height / 5, fontSize:20, fontWeight:'600', color:'#000000'}}>Leave Not Found</Text>
+              </View>
+            )
+          }}
         />
       </View>
       <Loader visible={loading} />

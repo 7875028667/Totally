@@ -24,7 +24,7 @@ const Timesheet = ({ navigation, route }) => {
                 </View>
 
                 <View style={{ paddingHorizontal: 10 }}>
-                    <Text>Check-out</Text>
+                    <Text style={styles.checkInCheckoutText}>Check-out</Text>
                     <Text style={styles.checkInTime}>{item.clock_out}</Text>
                 </View>
             </View>
@@ -46,14 +46,6 @@ const Timesheet = ({ navigation, route }) => {
                         <View style={styles.checkInBox}>
                             <Text style={styles.checkInText}>Check In - Check Out</Text>
                         </View>
-
-                        {/* <View style={[styles.checkInBox, { backgroundColor: '#fff', borderColor: '#00000040', borderWidth: 1 }]}>
-                            <Text style={styles.checkInText}>Check Out</Text>
-                        </View>
-
-                        <View style={[styles.checkInBox, { backgroundColor: '#fff', borderColor: '#00000040', borderWidth: 1 }]}>
-                            <Text style={[styles.checkInText, { color: 'green' }]}>Face Check In</Text>
-                        </View> */}
                     </View>
 
                     <FlatList
@@ -124,6 +116,6 @@ const styles = StyleSheet.create({
     checkInCheckoutText:{
         fontWeight:'700',
         fontSize:15,
-        color:'#969393'
+        color:'#000000'
     }
 })

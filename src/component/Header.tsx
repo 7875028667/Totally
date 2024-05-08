@@ -10,17 +10,17 @@ interface Props {
 
 
 const Header: FC<Props> = ({ title, showBellIcon }) => {
-    const navigation = useNavigation()
+    const Navigation = useNavigation()
 
     return (
         <View style={styles.headerBox} >
-            <TouchableOpacity onPress={() => navigation.goBack()} >
+            <TouchableOpacity onPress={() => Navigation.goBack()} >
                 <IonIcon name="arrow-back" color={'white'} size={width * 0.07} />
             </TouchableOpacity>
 
             <Text style={styles.title}>{title}</Text>
 
-            {showBellIcon && <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
+            {showBellIcon && <TouchableOpacity onPress={() => Navigation.navigate('Notification')}>
                 <IonIcon name="notifications" color={'white'} size={22} />
             </TouchableOpacity>}
         </View>

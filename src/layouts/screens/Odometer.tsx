@@ -1,84 +1,161 @@
-import { StyleSheet, Text, View, Dimensions, ScrollView, TouchableOpacity, TextInput, Pressable } from 'react-native'
-import React, { useState } from 'react'
-import Speedometer, { Background, Arc, Needle, Progress, Marks, Indicator } from 'react-native-cool-speedometer';
-import IonIcon from 'react-native-vector-icons/Ionicons';
-import { AnimatedCircularProgress } from 'react-native-circular-progress';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Dimensions, ScrollView, Pressable, TextInput, Image } from 'react-native';
 import Header from '../../component/Header';
-import { getMethod } from '../../utils/helper';
+import { postMethod, getMethod } from '../../utils/helper';
+import Loader from '../../component/Loader';
+import moment from 'moment';
+import DatePicker from 'react-native-date-picker';
+import { useNavigation } from '@react-navigation/native';
 
+const { width } = Dimensions.get('window');
 
-const { width, height } = Dimensions.get('window');
+const Odometer = () => {
+    const navigation = useNavigation();
+    const [loading, setLoading] = useState(false);
+    const [startOdometerValue, setStartOdometerValue] = useState('');
+    const [endOdometerValue, setEndOdometerValue] = useState('');
+    const [odometerData, setOdometerData] = useState([]);
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
-const Odometer = ({ navigation }: any) => {
-    const [loading, setLoading] = useState(false)
-    const [startodometerValue, setstartodometerValue] = useState('')
-    const [endodometerValue, setEndOdometerValue] = useState('')
+    const [startOdoMeterData, setStartOdoMeterData] = useState([]);
+    const [endOdoMeterData, setEndOdoMeterData] = useState([]);
+    const [startOdometerPressed, setStartOdometerPressed] = useState(false); 
+    // console.log('selectedDate',selectedDate);
+    
 
-    const getData = async () => {
+    // useEffect(() => {
+    //     getOdometerDetails();
+    // }, []);
 
+    // const getOdometerDetails = async () => {
+    //     try {
+    //         setLoading(true);
+    //         const api = await getMethod(`api/odometer-details`);
+    //         if (api?.status == 200) {
+    //             console.log('api', api?.data.data);
+    //             setOdometerData(api?.data.data);
+    //             setLoading(false);
+    //         } else {
+    //             console.log('error in status of odometerdetail api', api?.data.message);
+    //             setLoading(false);
+    //         }
+    //     } catch (error) {
+    //         console.log('error in odometer detail api', error);
+    //         setLoading(false);
+    //     }
+    // };
+
+    const handleStartOdometer = async () => {
         try {
-            setLoading(false)
-            const api: any = await getMethod(`api/odometer`)
-            console.log('api', api);
+            setLoading(true);
+            const data = {
+                start_odometer:startOdometerValue
+            };
+            const api:any = await postMethod(`api/start-odometer`, data);
+
             if (api.status === 200) {
-                setLoading(false)
+                setStartOdoMeterData(api?.data.data)
+                setLoading(false);
+                setStartOdometerPressed(true); // Mark Start Odometer as pressed
             } else {
-                console.log('api message', api.data.message);
-                setLoading(false)
+                console.log('error in start odometer api status', api.data);
+                setLoading(false);
             }
         } catch (error) {
-            console.log('error while odometer api', error);
-            setLoading(false)
-
+            console.log('error in start odometer api', error);
+            setLoading(false);
         }
+    };
 
-    }
+    const handleEndOdometer = async () => {
+        try {
+            setLoading(true);
+            // const total_distanceofspeedometer = startOdometerValue + endOdometerValue + ' km';
+            const data = {
+                end_odometer: endOdometerValue,
+                odometer_id:startOdoMeterData?.odometer_id
+            };
 
+            const api:any = await postMethod(`api/end-odometer`, data);
+            // console.log('aaaaaa', api.data);
 
-    const handleStartOdometer = () =>{
-        console.log('startodometerValue',startodometerValue);
-        setstartodometerValue('')
-        console.log('startodometerValue',startodometerValue);
-    }
+            if (api.status == 200) {
+                setEndOdoMeterData(api?.data.data)
+                setStartOdometerPressed(false);
+                setLoading(false);// Mark Start Odometer as not pressed
+            } else {
+                console.log('error in end odometer api status', api.data);
+                setLoading(false);
+            }
+        } catch (error) {
+            console.log('error in end odometer api', error);
+            setLoading(false);
+        }
+    };
 
-    const handleEndOdometer = () =>{
-        console.log('endodometerValue',endodometerValue);
-        setEndOdometerValue('')
-        console.log('endodometerValue',endodometerValue);
-    }
+    const handleCheckHistory = () => {
+        setShowDatePicker(true);
+    };
 
+    const handleConfirmDate = () => {
+        setShowDatePicker(false);
+        const serializableDate = selectedDate.toISOString();
+        console.log('serializableDate',serializableDate);
+        console.log('selectedDate',selectedDate);
+        
+        
+        navigation.navigate('OrderHistory', { selectedDatee: serializableDate });
+    };
+
+    const handleCancelDate = () => {
+        setShowDatePicker(false);
+    };
 
     return (
-        <View style={{ backgroundColor: 'white', height: '100%',  }}>
-            <Header showBellIcon={false} title='Odometer' />
+        <View style={styles.container}>
+            <Header showBellIcon={false} title="Odometer" />
             <ScrollView>
+                <Pressable 
+                    style={[styles.historyBtn]} // Add disabled style if Start Odometer button is pressed
+                    onPress={handleCheckHistory}
+                    // disabled={startOdometerPressed}  startOdometerPressed && styles.disabledBtn // Disable button if Start Odometer button is pressed
+                >
+                    <Text style={styles.historyBtnText}>Check Odometer History</Text>
+                </Pressable>
+                {showDatePicker && (
+                    <View style={styles.datePickerContainer}>
+                        <Text style={styles.datePickerTitle}>Choose Date To Check Odometer History</Text>
+                        <DatePicker  date={selectedDate} onDateChange={setSelectedDate} mode='date'  />
+                        <View style={styles.datePickerBtnContainer}>
+                            <Pressable style={styles.datePickerBtn} onPress={handleConfirmDate}> 
+                                <Text style={styles.datePickerBtnText}>Confirm</Text>
+                            </Pressable>
+                            <Pressable style={styles.datePickerBtn} onPress={handleCancelDate}>
+                                <Text style={styles.datePickerBtnText}>Cancel</Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                )}
                 <View style={styles.speedometerContainer}>
-                    <Speedometer
-                        value={128}
-                        fontFamily='squada-one'
-                        >
-                        <Background />
-                        <Arc />
-                        <Needle />
-                        <Progress />
-                        <Marks />
-                        <Indicator fixValue={false} />
-                    </Speedometer>
-                </View>
-                <View style={styles.dates}>
-                    <Text style={styles.datesText}>01, Sep 22 - 02, Oct 22</Text>
+                    <Image source={require('../../Images/odometer.png')} />
                 </View>
                 <View style={styles.odometerReadings}>
                     <View style={styles.odometerReadingsInner}>
-                        <Pressable style={styles.startOdometer} onPress={handleStartOdometer}>
+                        <Pressable 
+                            style={[styles.startOdometer, startOdometerPressed && styles.disabledBtn]} 
+                            onPress={handleStartOdometer}
+                            disabled={startOdometerPressed} 
+                        >
                             <Text style={styles.odometerReadingsText}>Start Odometer</Text>
                         </Pressable>
                         <TextInput
-                            placeholder='Start Odometer'
-                            keyboardType='decimal-pad'
-                            value={startodometerValue}
-                            onChangeText={(text) => setstartodometerValue(text)}
-                            style={{ borderWidth: 1 }}
+                            placeholder="Start Odometer"
+                            keyboardType="decimal-pad"
+                            value={startOdometerValue}
+                            onChangeText={(text) => setStartOdometerValue(text)}
+                            style={[styles.textInput, startOdometerPressed && styles.disabledTextInput]}
+                            editable={!startOdometerPressed} 
                         />
                     </View>
                     <View style={[styles.odometerReadingsInner, { marginLeft: 10 }]}>
@@ -86,76 +163,75 @@ const Odometer = ({ navigation }: any) => {
                             <Text style={styles.odometerReadingsText}>End Odometer</Text>
                         </Pressable>
                         <TextInput
-                            placeholder='End Odometer'
-                            keyboardType='decimal-pad'
-                            value={endodometerValue}
+                            placeholder="End Odometer"
+                            keyboardType="decimal-pad"
+                            value={endOdometerValue}
                             onChangeText={(text) => setEndOdometerValue(text)}
-                            style={{ borderWidth: 1 }}
+                            style={styles.textInput}
                         />
                     </View>
-
                 </View>
-                {/* <View style={styles.graphView}>
-                    <Text style={styles.onTimeText}>Total - On time</Text>
-                    <View style={styles.progressBarDetail}>
-                        <View>
-                            <AnimatedCircularProgress
-                                size={100}
-                                width={10}
-                                fill={75}
-                                tintColor="#49AA67"
-                                onAnimationComplete={() => console.log('onAnimationComplete')}
-                                backgroundColor="#EBE206" />
-                        </View>
-                        <View style={styles.calculation}>
-                            <View style={styles.details}>
-                                <View style={{ marginRight: 20 }}>
-                                    <Text style={[styles.dot, { color: '#49AA67' }]}>●</Text>
-                                </View>
-                                <View>
-                                    <Text style={styles.calculationText}>Total driving time </Text>
-                                    <Text style={styles.calculationText}>16th 25min</Text>
-                                </View>
-                            </View>
-                            <View style={styles.details}>
-                                <View style={{ marginRight: 20 }}>
-                                    <Text style={[styles.dot, { color: '#EBE206' }]}>●</Text>
-                                </View>
-                                <View>
-                                    <Text style={styles.calculationText}>Total idle time </Text>
-                                    <Text style={styles.calculationText}>2h 49min</Text>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </View> */}
-                {/* <View style={styles.vehicleStatusView}>
-                    <Text style={{ color: '#969393', fontSize: width * 0.045, fontWeight: '600' }}>Vehicle Status</Text>
-                </View> */}
             </ScrollView>
+            <Loader visible={loading} />
         </View>
-    )
-}
+    );
+};
 
-export default Odometer
+export default Odometer;
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: 'white',
+    },
+    historyBtn: {
+        marginTop:20,
+        marginRight:10, 
+        justifyContent:'center',
+        borderRadius:8, 
+        borderWidth:0.5,
+        height:30, 
+        width:width * 0.50, 
+        alignItems:'center',
+        alignSelf:'flex-end'
+    },
+    historyBtnText: {
+        fontSize: width * 0.04,
+        fontWeight: '500',
+        color: 'black',
+    },
+    datePickerContainer: {
+        marginTop: 20,
+        alignItems: 'center',
+    },
+    datePickerTitle: {
+        fontSize: width * 0.035,
+        fontWeight: '500',
+        color: 'black',
+    },
+    datePickerBtnContainer: {
+        flexDirection: 'row',
+        marginTop: 10,
+    },
+    datePickerBtn: {
+        marginHorizontal: 10,
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+        borderWidth: 0.5,
+        borderColor: '#ccc',
+    },
+    datePickerBtnText: {
+        fontSize: width * 0.04,
+        fontWeight: '500',
+        color: 'black',
+    },
     speedometerContainer: {
         alignSelf: 'center',
-        // width: width * 0.8,
-        // height: width * 0.8,
         borderBottomColor: '#C4C4C4',
         borderBottomWidth: 1,
         marginVertical: 20,
-        paddingBottom:40
-
-    },
-    dates: {
-        alignSelf: 'center',
-        paddingVertical: 15,
-    },
-    datesText: {
-        color: 'black'
+        paddingBottom: 40,
     },
     odometerReadings: {
         display: 'flex',
@@ -163,80 +239,40 @@ const styles = StyleSheet.create({
         backgroundColor: '#F6F6F6',
         padding: 10,
         elevation: 8,
+        marginTop:width * 0.035,
+
     },
     odometerReadingsInner: {
         width: '48%',
         alignSelf: 'center',
     },
-    startOdometer:{
-        paddingVertical:5, 
+    startOdometer: {
+        paddingVertical: 5,
         borderWidth: 0.8,
-        borderRadius:8, 
-        marginBottom: 10, 
-        width: '70%', 
-        alignSelf: 'center'
+        borderRadius: 8,
+        marginBottom: 10,
+        width: '70%',
+        alignSelf: 'center',
     },
     odometerReadingsText: {
         color: '#565252',
         fontSize: width * 0.038,
         fontWeight: '700',
         alignSelf: 'center',
-        marginBottom: 5
+        marginBottom: 5,
+    },
+    disabledBtn: {
+        opacity: 0.5, // Reduce opacity to indicate disabled state
+    },
+    disabledTextInput: {
+        backgroundColor: '#F6F6F6', // Change background color to indicate disabled state
+    },
+    textInput: {
+        borderWidth: 1,
+        color:'#000000',
+        fontSize:15,
+        fontWeight:'400'
+    },
+});
 
 
-    },
-    odometerReadingsNo: {
-        color: 'black',
-        fontSize: width * 0.06,
-        alignSelf: 'center',
-        fontWeight: '800',
-
-    },
-    odometerReadingsTimes: {
-        color: '#565252',
-        fontSize: width * 0.035,
-        alignSelf: 'center',
-    },
-    graphView: {
-        padding: 20,
-    },
-    onTimeText: {
-        color: '#565252',
-        fontSize: width * 0.05,
-        fontWeight: '700',
-        paddingBottom: 10,
-    },
-    progressBarDetail: {
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    calculation: {
-        width: '50%',
-    },
-    calculationText: {
-        fontSize: width * 0.035,
-        color: '#888888'
-    },
-    details: {
-        display: 'flex',
-        flexDirection: 'row',
-        // justifyContent:'space-between',
-
-    },
-    dot: {
-        fontSize: width * 0.085,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        fontWeight: '500',
-        alignSelf: 'center'
-
-    },
-    vehicleStatusView: {
-        backgroundColor: '#ECECEC',
-        padding: 15,
-        marginBottom: 30,
-    }
-})

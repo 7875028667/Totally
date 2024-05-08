@@ -27,38 +27,41 @@ const AddMaintenance = ({ navigation }: any) => {
     },[])
 
     const getData = async() =>{
-        setLoading(true)
+        
         try {
+            setLoading(true)
             const api:any = await getMethod(`api/vehicle-detail`);
+            console.log('api',api);
+            
             if(api.status === 200){
                 setLoading(false)
-                setVehicleDetail(api.data.data.vehicle)
-                // console.log('api.data.data.vehicle',api.data.data.vehicle);
-                
+                setVehicleDetail(api?.data?.data?.vehicle)
             }else{
-                setLoading(false);
                 Snackbar.show({
                     text: api.data.message,
                     duration: Snackbar.LENGTH_SHORT,
                     textColor: '#AE1717',
                     backgroundColor: '#F2A6A6',
                 });
+                setLoading(false);
             }
         } catch (error) {
-            console.log('error',error);
+            console.log('error in vehoicle detail api',error);
             Snackbar.show({
                 text: error,
                 duration: Snackbar.LENGTH_SHORT,
                 textColor: 'black',
                 backgroundColor: 'red',
             });
+            setLoading(false)
         }
     }
 
 
     const submitData = async () => {
-        setLoading(true)
+
         try {
+            setLoading(true)
             const data = {
                 bill_name: billName,
                 bill_date: billDate,
@@ -69,14 +72,12 @@ const AddMaintenance = ({ navigation }: any) => {
 
             const api: any = await postMethod(`api/add-maintenance`, data);
             if (api.status === 200) {
-                console.log('api',api);
-                
-                setLoading(false)
+                console.log('POST api',api);
                 Snackbar.show({
                     text: 'Submit Successfully',
                     duration: Snackbar.LENGTH_SHORT,
-                    textColor: '#AE1717',
-                    backgroundColor: '#F2A6A6',
+                    textColor: '#ffffff',
+                    backgroundColor: 'green',
                 });
                 setBillName('');
                 setBillDate('');
@@ -84,26 +85,28 @@ const AddMaintenance = ({ navigation }: any) => {
                 setBillType('');
                 setImageUri(null);
                 setSelectedImage(null);
+                setLoading(false)
             } else {
-                setLoading(false);
+                
                 console.log('else block in api');
                 Snackbar.show({
-                    text: api.data.message,
+                    text: 'Something Went Wrong',
                     duration: Snackbar.LENGTH_SHORT,
                     textColor: 'green',
                     backgroundColor: '#F2A6A6',
                 });
+                setLoading(false);
             }
         } catch (error) {
-            console.log('errorrrr', error);
+            console.log('errorrrr inadd maintaince', error);
 
-            setLoading(false)
             Snackbar.show({
                 text: error,
                 duration: Snackbar.LENGTH_SHORT,
                 textColor: '#AE1717',
                 backgroundColor: '#F2A6A6',
             });
+            setLoading(false)
         }
 
     }
@@ -158,26 +161,6 @@ const AddMaintenance = ({ navigation }: any) => {
             ],
             { cancelable: true }
         );
-
-        // launchCamera(options, (response: ImagePickerResponse) => {
-
-        //     if (response.didCancel) {
-        //         console.log('User cancelled');
-        //         setImageUri(null);
-        //     } else if (response.error) {
-        //         console.log('ImagePicker Error:', response.error);
-        //         setImageUri(null);
-        //     } else {
-        //         const source = response.assets[0].uri;
-        //         const newUris = [...imageUris, source];
-        //         setImageUri(source);
-        //         setImageUris(newUris);
-
-        //         if (selectedImage === null) {
-        //             setSelectedImage(source);
-        //         }
-        //     }
-        // });
     };
 
     const handleImagePickerResponse = (response) => {
@@ -212,7 +195,7 @@ const AddMaintenance = ({ navigation }: any) => {
                         <View>
                             <Image source={{uri:vehicleDetail?.image}}
                                 style={styles.vehicleImage} />
-                            <Text style={{ color: 'grey', fontSize: width * 0.035, textAlign:'center' }}>{vehicleDetail.vehicle_modal}</Text>
+                            <Text style={{ color: 'grey', fontSize: width * 0.035, textAlign:'center' }}>{vehicleDetail?.vehicle_modal}</Text>
                         </View>
                     </View>
                     <View style={styles.vehicleDetailView}>
@@ -220,7 +203,7 @@ const AddMaintenance = ({ navigation }: any) => {
                             <Text style={styles.vehicleDetailsText}>  license_plate :</Text>
                         </View>
                         <View style={styles.detailDiv}>
-                            <Text style={{ color: 'black', fontSize: width * 0.04 }}>{vehicleDetail.license_plate}</Text>
+                            <Text style={{ color: 'black', fontSize: width * 0.04 }}>{vehicleDetail?.license_plate}</Text>
                         </View>
                     </View>
                     <View style={styles.vehicleDetailView}>
@@ -228,15 +211,15 @@ const AddMaintenance = ({ navigation }: any) => {
                             <Text style={styles.vehicleDetailsText}>Horsepower :</Text>
                         </View>
                         <View style={styles.detailDiv}>
-                            <Text style={{ color: 'black', fontSize: width * 0.04 }}>{vehicleDetail.horsepower}</Text>
+                            <Text style={{ color: 'black', fontSize: width * 0.04 }}>{vehicleDetail?.horsepower}</Text>
                         </View>
                     </View>
                     <View style={[styles.vehicleDetailView, { paddingBottom: 10 }]}>
                         <View style={styles.vehicleDetailInnerViewTwo}>
-                            <Text style={styles.vehicleDetailsText}>Modal Color :</Text>
+                            <Text style={styles.vehicleDetailsText}>Model colour :</Text>
                         </View>
                         <View style={styles.detailDiv}>
-                            <Text style={{ color: 'black', fontSize: width * 0.04 }}>{vehicleDetail.model_color}</Text>
+                            <Text style={{ color: 'black', fontSize: width * 0.04 }}>{vehicleDetail?.model_color}</Text>
                         </View>
                     </View>
                 </View>
@@ -244,19 +227,19 @@ const AddMaintenance = ({ navigation }: any) => {
                 <View style={styles.billDetail}>
                     <View style={styles.billDetailInner}>
                         <Text style={styles.billHead}>Bill Name : </Text>
-                        <TextInput placeholder='Enter Bill Name' value={billName} onChangeText={(text) => setBillName(text)}  style={{color:'#000000', fontSize:16, fontWeight:'400'}}/>
+                        <TextInput placeholder='Enter Bill Name' value={billName} onChangeText={(text) => setBillName(text)}  style={{color:'#000000', fontSize:16, fontWeight:'400', width:'60%'}}/>
                     </View>
                     <View style={styles.billDetailInner}>
                         <Text style={styles.billHead}>Bill Date : </Text>
-                        <TextInput placeholder='Enter Bill Date' value={billDate} onChangeText={(text) => setBillDate(text)} keyboardType='decimal-pad'  style={{color:'#000000', fontSize:16, fontWeight:'400'}}/>
+                        <TextInput placeholder='Enter Bill Date' value={billDate} onChangeText={(text) => setBillDate(text)} keyboardType='decimal-pad'  style={{color:'#000000', fontSize:16, fontWeight:'400',width:'60%'}}/>
                     </View>
                     <View style={styles.billDetailInner}>
                         <Text style={styles.billHead}>Bill Amount : </Text>
-                        <TextInput placeholder='Enter Bill Amount' value={billAmount} onChangeText={(text) => setBillAmount(text)} keyboardType='decimal-pad' style={{color:'#000000', fontSize:16, fontWeight:'400'}}/>
+                        <TextInput placeholder='Enter Bill Amount' value={billAmount} onChangeText={(text) => setBillAmount(text)} keyboardType='decimal-pad' style={{color:'#000000', fontSize:16, fontWeight:'400',width:'60%'}}/>
                     </View>
                     <View style={styles.billDetailInner}>
                         <Text style={styles.billHead}>Bill Type : </Text>
-                        <TextInput placeholder='Enter Bill Type' value={billType} onChangeText={(text) => setBillType(text)} style={{color:'#000000', fontSize:16, fontWeight:'400'}}/>
+                        <TextInput placeholder='Enter Bill Type' value={billType} onChangeText={(text) => setBillType(text)} style={{color:'#000000', fontSize:16, fontWeight:'400',width:'60%'}}/>
                     </View>
                 </View>
                 <View>
@@ -274,8 +257,8 @@ const AddMaintenance = ({ navigation }: any) => {
                         <Image source={{ uri: selectedImage }} style={styles.profileImage} />
                     </View>
                 ) : (
-                    <View style={{ alignSelf: 'center', marginTop: 10 }}>
-                        <Text>No Image is selected</Text>
+                    <View style={{ alignSelf: 'center', marginTop: 10 , }}>
+                        <Text style={{color:'#000000',fontSize:14, }}>No Image is selected</Text>
                     </View>
                 )}
 
