@@ -79,6 +79,7 @@ const AddMaintenance = ({ navigation }: any) => {
                     textColor: '#ffffff',
                     backgroundColor: 'green',
                 });
+                navigation.navigate('VehicleMaintenance')
                 setBillName('');
                 setBillDate('');
                 setBillAmount('');

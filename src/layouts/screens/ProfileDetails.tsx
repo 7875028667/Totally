@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Text, View, Image, Dimensions, Button, ScrollView, TouchableOpacity, Platform, PermissionsAndroid, TextInput, Alert, } from 'react-native';
+import { StyleSheet, Text, View, Image, Dimensions, Button, ScrollView, TouchableOpacity, Platform, PermissionsAndroid, TextInput, Alert, KeyboardAvoidingView, } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import ProfileHeader from '../../component/ProfileHeader';
 import { FormPostMethod, getStorageData, storeData } from '../../utils/helper';
 import Snackbar from 'react-native-snackbar';
 import { CommonActions, useFocusEffect } from '@react-navigation/native';
 import Loader from '../../component/Loader';
-import { useForm, Controller } from "react-hook-form"
-
+import { useForm, Controller } from "react-hook-form";
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 const { width, height } = Dimensions.get('window');
 
@@ -51,28 +51,28 @@ const ProfileDetails = ({ navigation, route }: any) => {
     )
 
 
-    const onSubmit = (data:any) => {
+    const onSubmit = (data: any) => {
         SaveDetail(data)
     }
 
 
-    const SaveDetail = async (data:any) => {
-    console.log('adatat',data);
-    
+    const SaveDetail = async (data: any) => {
+        console.log('adatat', data);
+
         try {
             setLoading(true)
             const formData = new FormData();
             formData.append('name', data?.name);
             formData.append('email', data?.email);
             formData.append('address', data?.address); +
-            formData.append('country', data?.country);
+                formData.append('country', data?.country);
             formData.append('phone', data?.mobileNo)
             formData.append('image', {
                 uri: imageUri,
                 type: 'image/jpg',
                 name: 'profile.jpg'
             });
-    
+
             console.log('formData', formData);
 
 
@@ -197,179 +197,204 @@ const ProfileDetails = ({ navigation, route }: any) => {
             }
         }
     };
-
     return (
-        <View style={{ backgroundColor: 'white', height: height * 1 }}>
-            <ProfileHeader showBackIcon={true} showBellIcon={false} title='' showCamera={true} onPress={openCamera} image={imageUri} />
+        <KeyboardAwareScrollView
+        >
+            <View style={{ backgroundColor: 'white', height: height * 1, }}>
+                <ProfileHeader showBackIcon={true} showBellIcon={false} title='' showCamera={true} onPress={openCamera} image={imageUri} />
 
-            <ScrollView showsVerticalScrollIndicator={false} style={{ marginTop: '30%', }}>
-                <View style={styles.div}>
-                    <View style={styles.iconView}>
-                        <Text style={styles.viewHead}>Name</Text>
-                    </View>
-                    <View style={styles.detailsView}>
-                        <Controller
-                            control={control}
-                            rules={{ required: true }}
-                            name='name'
-                            render={({ field: { onChange, value } }) => (
-                                <TextInput
-                                    style={[styles.viewData, { paddingVertical: 3 }]}
-                                    onChangeText={(text) => onChange(text)}
-                                    value={value}
-                                />
-                            )}
-                        />
-                    </View>
+                <ScrollView   style={{ marginTop: '30%', }}>
+                    <View style={styles.div}>
+                        <View style={styles.iconView}>
+                            <Text style={styles.viewHead}>Name</Text>
+                        </View>
+                        <View style={styles.detailsView}>
+                            <Controller
+                                control={control}
+                                rules={{
+                                    required: true,
+                                    pattern: {
+                                        value: /^[A-Za-z ]+$/,
+                                        message: "Only alphabets and spaces are allowed."
+                                    }
 
-                </View>
-                {errors.email && errors.email.type === "required" && (
-                    <View>
-                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Name is required.</Text>
-                    </View>
-                )}
-
-                <View style={styles.div}>
-                    <View style={styles.iconView}>
-                        <Text style={styles.viewHead}>Email</Text>
-                    </View>
-                    <View style={styles.detailsView}>
-                        <Controller
-                            control={control}
-                            name='email'
-                            rules={{
-                                required: true,
-                                pattern: /^[^@ ]+@[^@ ]+\.[^@ .]{2,}$/
-                            }}
-                            render={({ field: { onChange, value } }) => (
-                                <TextInput
-                                    style={[styles.viewData, { paddingVertical: 3 }]}
-                                    onChangeText={(text) => onChange(text)}
-                                    value={value}
-                                />
-                            )}
-                        />
+                                }}
+                                name='name'
+                                render={({ field: { onChange, value } }) => (
+                                    <TextInput
+                                        style={[styles.viewData, { paddingVertical: 3 }]}
+                                        onChangeText={(text) => onChange(text)}
+                                        value={value}
+                                    />
+                                )}
+                            />
+                        </View>
 
                     </View>
+                    {errors.name && errors.name.type === "required" && (
+                        <View>
+                            <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Name is required.</Text>
+                        </View>
+                    )}
+                    {errors.name && errors.name.type === "pattern" && (
+                        <View>
+                            <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Only alphabets and spaces are allowed</Text>
+                        </View>
+                    )}
 
-                </View>
-                {errors.email && errors.email.type === "required" && (
-                    <View>
-                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Email is required.</Text>
-                    </View>
-                )}
-                {errors.email && errors.email.type === "pattern" && (
-                    <View >
-                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Email is not valid.</Text>
-                    </View>
-                )}
+                    <View style={styles.div}>
+                        <View style={styles.iconView}>
+                            <Text style={styles.viewHead}>Email</Text>
+                        </View>
+                        <View style={styles.detailsView}>
+                            <Controller
+                                control={control}
+                                name='email'
+                                rules={{
+                                    required: true,
+                                    pattern: /^[^@ ]+@[^@ ]+\.[^@ .]{2,}$/
+                                }}
+                                render={({ field: { onChange, value } }) => (
+                                    <TextInput
+                                        style={[styles.viewData, { paddingVertical: 3 }]}
+                                        onChangeText={(text) => onChange(text)}
+                                        value={value}
+                                    />
+                                )}
+                            />
 
-                <View style={styles.div}>
-                    <View style={styles.iconView}>
-                        <Text style={styles.viewHead}>Mobile no.</Text>
-                    </View>
-                    <View style={styles.detailsView}>
-                        <Controller
-                            control={control}
-                            name='mobileNo'
-                            rules={{
-                                required: true,
-                                maxLength: 10,
-                                pattern: /^[0-9]*$/
-                            }}
-                            render={({ field: { onChange, value } }) => (
-                                <TextInput
-                                    style={[styles.viewData, { paddingVertical: 3 }]}
-                                    onChangeText={(text) => onChange(text)}
-                                    value={value}
-                                />
-                            )}
-                        />
-                    </View>
-                </View>
-                {errors.mobileNo && errors.mobileNo.type === "required" && (
-                    <View >
-                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Mobile Number is required.</Text>
-                    </View>
-                )}
-                {errors.mobileNo && errors.mobileNo.type === "maxLength" && (
-                    <View >
-                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>
-                            Mobile Number should be  10 characters.
-                        </Text>
-                    </View>
-                )}
-                {errors.mobileNo && errors.mobileNo.type === "pattern" && (
-                    <View >
-                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Only Number is Accepted </Text>
-                    </View>
-                )}
+                        </View>
 
-                <View style={styles.div}>
-                    <View style={styles.iconView}>
-                        <Text style={styles.viewHead}>Country</Text>
                     </View>
-                    <View style={styles.detailsView}>
-                        <Controller
-                            control={control}
-                            name='country'
-                            rules={{
-                                required: true,
-                            }}
-                            render={({ field: { onChange, value } }) => (
-                                <TextInput
-                                    style={[styles.viewData, { paddingVertical: 3 }]}
-                                    onChangeText={(text) => onChange(text)}
-                                    value={value}
-                                />
-                            )}
-                        />
-                    </View>
+                    {errors.email && errors.email.type === "required" && (
+                        <View>
+                            <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Email is required.</Text>
+                        </View>
+                    )}
+                    {errors.email && errors.email.type === "pattern" && (
+                        <View >
+                            <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Email is not valid.</Text>
+                        </View>
+                    )}
 
-                </View>
-                {errors.country && errors.country.type === "required" && (
-                    <View>
-                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Country Name is  required.</Text>
+                    <View style={styles.div}>
+                        <View style={styles.iconView}>
+                            <Text style={styles.viewHead}>Mobile no.</Text>
+                        </View>
+                        <View style={styles.detailsView}>
+                            <Controller
+                                control={control}
+                                name='mobileNo'
+                                rules={{
+                                    required: true,
+                                    maxLength: 8,
+                                    pattern: /^[0-9]*$/
+                                }}
+                                render={({ field: { onChange, value } }) => (
+                                    <TextInput
+                                        style={[styles.viewData, { paddingVertical: 3 }]}
+                                        onChangeText={(text) => onChange(text)}
+                                        value={value}
+                                    />
+                                )}
+                            />
+                        </View>
                     </View>
-                )}
+                    {errors.mobileNo && errors.mobileNo.type === "required" && (
+                        <View >
+                            <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Mobile Number is required.</Text>
+                        </View>
+                    )}
+                    {errors.mobileNo && errors.mobileNo.type === "maxLength" && (
+                        <View >
+                            <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>
+                                Mobile Number should be  8 characters.
+                            </Text>
+                        </View>
+                    )}
+                    {errors.mobileNo && errors.mobileNo.type === "pattern" && (
+                        <View >
+                            <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Only Number is Accepted </Text>
+                        </View>
+                    )}
 
-                <View style={styles.div}>
-                    <View style={styles.iconView}>
-                        <Text style={styles.viewHead}>Address</Text>
-                    </View>
-                    <View style={styles.detailsView}>
-                        <Controller
-                            control={control}
-                            name='address'
-                            rules={{
-                                required: true
-                            }}
-                            render={({ field: { onChange, value } }) => (
-                                <TextInput
-                                    style={[styles.viewData, { paddingVertical: 3 }]}
-                                    onChangeText={(text) => onChange(text)}
-                                    value={value}
-                                />
-                            )}
-                        />
-                    </View>
+                    <View style={styles.div}>
+                        <View style={styles.iconView}>
+                            <Text style={styles.viewHead}>Country</Text>
+                        </View>
+                        <View style={styles.detailsView}>
+                            <Controller
+                                control={control}
+                                name='country'
+                                rules={{
+                                    required: true,
+                                    pattern: {
+                                        value: /^[A-Za-z ]+$/,
+                                        message: "Only alphabets and spaces are allowed."
+                                    }
 
-                </View>
-                {errors.address && errors.address.type === "required" && (
-                    <View>
-                        <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Address is  required.</Text>
-                    </View>
-                )}
+                                }}
+                                render={({ field: { onChange, value } }) => (
+                                    <TextInput
+                                        style={[styles.viewData, { paddingVertical: 3 }]}
+                                        onChangeText={(text) => onChange(text)}
+                                        value={value}
+                                    />
+                                )}
+                            />
+                        </View>
 
-                <View style={styles.buttonsView}>
-                    <TouchableOpacity style={styles.signBtn} onPress={handleSubmit(onSubmit)}>
-                        <Text style={styles.signBtnText}>Save</Text>
-                    </TouchableOpacity>
-                </View>
-            </ScrollView>
-            <Loader visible={loading} />
-        </View>
+                    </View>
+                    {errors.country && errors.country.type === "required" && (
+                        <View>
+                            <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Country Name is  required.</Text>
+                        </View>
+                    )}
+                    {errors.country && errors.country.type === "pattern" && (
+                        <View>
+                            <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Only alphabets and spaces are allowed</Text>
+                        </View>
+                    )}
+
+                    <View style={styles.div}>
+                        <View style={styles.iconView}>
+                            <Text style={styles.viewHead}>Address</Text>
+                        </View>
+                        <View style={styles.detailsView}>
+                            <Controller
+                                control={control}
+                                name='address'
+                                rules={{
+                                    required: true
+                                }}
+                                render={({ field: { onChange, value } }) => (
+                                    <TextInput
+                                        style={[styles.viewData, { paddingVertical: 3 }]}
+                                        onChangeText={(text) => onChange(text)}
+                                        value={value}
+                                    />
+                                )}
+                            />
+                        </View>
+
+                    </View>
+                    {errors.address && errors.address.type === "required" && (
+                        <View>
+                            <Text style={{ color: 'red', fontSize: 14, marginLeft: 20 }}>Address is  required.</Text>
+                        </View>
+                    )}
+
+                    <View style={styles.buttonsView}>
+                        <TouchableOpacity style={styles.signBtn} onPress={handleSubmit(onSubmit)}>
+                            <Text style={styles.signBtnText}>Save</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+                <Loader visible={loading} />
+            </View>
+        </KeyboardAwareScrollView>
     )
+
 }
 
 export default ProfileDetails

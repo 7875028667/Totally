@@ -44,6 +44,12 @@ export const postMethod = async (url, body) => {
             });
         } else {
             console.log('postMethod error reason is internet =>', internet);
+            Snackbar.show({
+                text: 'Check Your Internet',
+                duration: Snackbar.LENGTH_SHORT,
+                textColor: '#AE1717',
+                backgroundColor: '#F2A6A6',
+            });
             return internet.isInternetReachable;
         }
     } catch (e) {
@@ -74,6 +80,12 @@ export const getMethod = async url => {
             });
         } else {
             console.log('getMethod error reason is internet =>', internet);
+            Snackbar.show({
+                text: 'Check Your Internet',
+                duration: Snackbar.LENGTH_SHORT,
+                textColor: '#AE1717',
+                backgroundColor: '#F2A6A6',
+            });
             return internet.isInternetReachable;
         }
     } catch (e) {
@@ -105,6 +117,12 @@ export const FormPostMethod = async (url, body) => {
             });
         } else {
             console.log('postMethod error reason is internet =>', internet);
+            Snackbar.show({
+                text: 'Check Your Internet',
+                duration: Snackbar.LENGTH_SHORT,
+                textColor: '#AE1717',
+                backgroundColor: '#F2A6A6',
+            });
             return internet.isInternetReachable;
         }
     } catch (error) {

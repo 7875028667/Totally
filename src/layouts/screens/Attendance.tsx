@@ -24,34 +24,39 @@ const Attendance = ({ navigation }: any) => {
     const [loading, setLoading] = useState(false);
     const [currentLocation, setCurrentLocation] = useState<any>(false);
     const [useraddress, setuserAddress] = useState('')
-    const [attendanceid, setAttendanceid] = useState<number>()
-    console.log('attendanceid', attendanceid);
-    console.log('isPunchedIn',isPunchedIn);
-    
+    // const [attendanceid, setAttendanceid] = useState<number>()
+    // console.log('attendanceid', attendanceid);
+    // console.log('isPunchedIn',isPunchedIn);
 
+
+    // useEffect(() => {
+    //     const loadAttendanceId = async () => {
+    //         try {
+    //             const storedAttendanceId = await AsyncStorage.getItem('attendanceId');
+    //             if (storedAttendanceId) {
+    //                 setAttendanceid(parseInt(storedAttendanceId, 10));
+    //             }
+    //         } catch (error) {
+    //             console.log('Error loading attendance id from AsyncStorage:', error);
+    //         }
+    //     };
+
+    //     getLocationAsync();
+    //     if (isFocused) {
+    //         loadAttendanceId();
+    //         punchData();
+    //     }
+
+    //     return () => {
+    //         // Cleanup function
+    //     };
+    // }, [isFocused]);
     useEffect(() => {
-        const loadAttendanceId = async () => {
-            try {
-                const storedAttendanceId = await AsyncStorage.getItem('attendanceId');
-                if (storedAttendanceId) {
-                    setAttendanceid(parseInt(storedAttendanceId, 10));
-                }
-            } catch (error) {
-                console.log('Error loading attendance id from AsyncStorage:', error);
-            }
-        };
-
         getLocationAsync();
         if (isFocused) {
-            loadAttendanceId();
             punchData();
         }
-
-        return () => {
-            // Cleanup function
-        };
     }, [isFocused]);
-
 
 
     const requestLocationPermission = async () => {
@@ -116,7 +121,7 @@ const Attendance = ({ navigation }: any) => {
         })
     };
 
-    const punchData = async (attendanceid: number) => {
+    const punchData = async () => {
         try {
             setLoading(true)
             const api: any = await getMethod(`api/punch-status`)
@@ -152,12 +157,12 @@ const Attendance = ({ navigation }: any) => {
                 longitude: longitude
             }
             const api: any = await postMethod(`api/clock-in`, requestbody);
-            console.log('clockv', api?.data);
-            console.log('api?.data?.data?.attendance_id', api?.data?.data?.attendance?.attendance_id);
+            // console.log('clockv', api?.data);
+            // console.log('api?.data?.data?.attendance_id', api?.data?.data?.attendance?.attendance_id);
 
             if (api.status === 200) {
-                punchData(api?.data?.data?.attendance?.attendance_id)
-                setAttendanceid(api?.data?.data?.attendance?.attendance_id)
+                punchData()
+                // setAttendanceid(api?.data?.data?.attendance?.attendance_id)
                 setIsPunchedIn(true)
                 setCurrentTime(formattedDate)
                 setCurrentDate(formattedTime)
@@ -167,11 +172,11 @@ const Attendance = ({ navigation }: any) => {
                     textColor: 'white',
                     backgroundColor: 'green',
                 });
-                const attendanceIdFromAPI = api?.data?.data?.attendance?.attendance_id;
-                if (attendanceIdFromAPI) {
-                    await AsyncStorage.setItem('attendanceId', attendanceIdFromAPI.toString()); // Save the attendanceid to AsyncStorage
-                    // setAttendanceid(attendanceIdFromAPI);
-                }
+                // const attendanceIdFromAPI = api?.data?.data?.attendance?.attendance_id;
+                // if (attendanceIdFromAPI) {
+                //     await AsyncStorage.setItem('attendanceId', attendanceIdFromAPI.toString()); // Save the attendanceid to AsyncStorage
+                //     // setAttendanceid(attendanceIdFromAPI);
+                // }
                 setLoading(false)
             } else {
                 console.log('api not work correctly');
@@ -190,7 +195,7 @@ const Attendance = ({ navigation }: any) => {
     };
 
     const handlePunchOut = async () => {
-        if (attendanceid) {
+        // if (attendanceid) {
             try {
                 setLoading(true)
                 const currentDate = new Date();
@@ -203,13 +208,15 @@ const Attendance = ({ navigation }: any) => {
                     clock_out: formattedDateTime,
                     latitude: latitude,
                     longitude: longitude,
-                    attendance_id: attendanceid
+                    // attendance_id: attendanceid
                 }
                 // console.log('punchoutdata', punchoutdata)
                 const api: any = await postMethod(`api/clock-out`, punchoutdata)
                 // console.log('apiiiiiout', api);
 
                 if (api.status === 200) {
+                    punchData()
+                    setIsPunchedIn(false)
                     setCurrentTime(formattedDate)
                     setCurrentDate(formattedTime)
                     Snackbar.show({
@@ -218,11 +225,11 @@ const Attendance = ({ navigation }: any) => {
                         textColor: 'black',
                         backgroundColor: 'green',
                     });
-                    setIsPunchedIn(false)
-                    await AsyncStorage.removeItem('attendanceId');
+          
+                    // await AsyncStorage.removeItem('attendanceId');
                     setLoading(false)
                     console.log('out');
-                    
+
                 } else {
                     console.log('api not work correctly');
                     setLoading(false)
@@ -239,10 +246,10 @@ const Attendance = ({ navigation }: any) => {
                 });
                 setLoading(false)
             }
-        } else {
-            console.log('Please Try Again');
+        // } else {
+        //     console.log('Please Try Again');
 
-        }
+        // }
     }
 
     return (

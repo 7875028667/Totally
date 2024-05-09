@@ -21,30 +21,6 @@ const Odometer = () => {
     const [startOdoMeterData, setStartOdoMeterData] = useState([]);
     const [endOdoMeterData, setEndOdoMeterData] = useState([]);
     const [startOdometerPressed, setStartOdometerPressed] = useState(false); 
-    // console.log('selectedDate',selectedDate);
-    
-
-    // useEffect(() => {
-    //     getOdometerDetails();
-    // }, []);
-
-    // const getOdometerDetails = async () => {
-    //     try {
-    //         setLoading(true);
-    //         const api = await getMethod(`api/odometer-details`);
-    //         if (api?.status == 200) {
-    //             console.log('api', api?.data.data);
-    //             setOdometerData(api?.data.data);
-    //             setLoading(false);
-    //         } else {
-    //             console.log('error in status of odometerdetail api', api?.data.message);
-    //             setLoading(false);
-    //         }
-    //     } catch (error) {
-    //         console.log('error in odometer detail api', error);
-    //         setLoading(false);
-    //     }
-    // };
 
     const handleStartOdometer = async () => {
         try {
@@ -105,7 +81,7 @@ const Odometer = () => {
         console.log('selectedDate',selectedDate);
         
         
-        navigation.navigate('OrderHistory', { selectedDatee: serializableDate });
+        navigation.navigate('OdometerHistory', { selectedDatee: serializableDate });
     };
 
     const handleCancelDate = () => {
