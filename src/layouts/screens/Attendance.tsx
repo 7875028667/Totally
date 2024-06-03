@@ -10,54 +10,36 @@ import Snackbar from 'react-native-snackbar';
 import { useIsFocused } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import ProminentDisclosure from '../../component/ProminentDisclosure';
 
 const { width } = Dimensions.get('window');
 
-const Attendance = ({ navigation }: any) => {
-
+const Attendance = ({ navigation }) => {
     const isFocused = useIsFocused();
 
     const [currentTime, setCurrentTime] = useState('');
     const [currentDate, setCurrentDate] = useState('');
-    const [isPunchedIn, setIsPunchedIn] = useState<boolean>();
+    const [isPunchedIn, setIsPunchedIn] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [currentLocation, setCurrentLocation] = useState<any>(false);
-    const [useraddress, setuserAddress] = useState('')
-    // const [attendanceid, setAttendanceid] = useState<number>()
-    // console.log('attendanceid', attendanceid);
-    // console.log('isPunchedIn',isPunchedIn);
+    const [currentLocation, setCurrentLocation] = useState(null);
+    const [userAddress, setUserAddress] = useState('');
+    const [showDisclosure, setShowDisclosure] = useState(false);
 
-
-    // useEffect(() => {
-    //     const loadAttendanceId = async () => {
-    //         try {
-    //             const storedAttendanceId = await AsyncStorage.getItem('attendanceId');
-    //             if (storedAttendanceId) {
-    //                 setAttendanceid(parseInt(storedAttendanceId, 10));
-    //             }
-    //         } catch (error) {
-    //             console.log('Error loading attendance id from AsyncStorage:', error);
-    //         }
-    //     };
-
-    //     getLocationAsync();
-    //     if (isFocused) {
-    //         loadAttendanceId();
-    //         punchData();
-    //     }
-
-    //     return () => {
-    //         // Cleanup function
-    //     };
-    // }, [isFocused]);
     useEffect(() => {
-        getLocationAsync();
         if (isFocused) {
+            checkLocationPermissionAccepted();
             punchData();
         }
     }, [isFocused]);
 
+    const checkLocationPermissionAccepted = async () => {
+        const accepted = await AsyncStorage.getItem('locationPermissionAccepted');
+        if (!accepted) {
+            setShowDisclosure(true);
+        } else {
+            requestLocationPermission();
+        }
+    };
 
     const requestLocationPermission = async () => {
         try {
@@ -71,233 +53,165 @@ const Attendance = ({ navigation }: any) => {
                     buttonPositive: 'OK',
                 }
             );
-            if (granted == PermissionsAndroid.RESULTS.GRANTED) {
-                return true
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                getLocationAsync();
             } else {
                 console.log('Location permission denied');
-                return false
             }
         } catch (err) {
             console.warn(err);
-            return false
         }
     };
 
     const getLocationAsync = async () => {
         setLoading(true);
-        const result = requestLocationPermission();
-        result.then(res => {
-            if (res) {
-                Geolocation.getCurrentPosition(
-                    position => {
-                        const { latitude, longitude } = position.coords;
-                        setCurrentLocation(position.coords);
-                        axios.get(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyB0sTJadohiz4yL1uLBrO8MsCQD_VxfLvU&language=en`)
-                            .then((resp) => {
-                                const addressComponents = resp.data.results[0].address_components
-                                const address = `${addressComponents[1].long_name}, ${addressComponents[2].long_name}\n${addressComponents[addressComponents.length - 2].long_name} - ${addressComponents[addressComponents.length - 1].long_name}\n${addressComponents[addressComponents.length - 3].long_name}`;
-                                // console.log('address', address);
-                                setuserAddress(address)
-                                setLoading(false);
-
-                            })
-                            .catch((error) => {
-                                console.log('error while google map api', error);
-                                setLoading(false)
-                            })
-                    },
-                    error => {
-                        console.error('Error fetching location:', error);
-                        setCurrentLocation(false)
-                        setLoading(false)
-                    },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
-                );
-            } else {
-                console.log('Location permission not granted.');
-                setLoading(false)
-
-            }
-        })
-    };
-
-    const punchData = async () => {
         try {
-            setLoading(true)
-            const api: any = await getMethod(`api/punch-status`)
-            // console.log('api punchData',api.data);
-
-            if (api.status === 200) {
-                setIsPunchedIn(api?.data?.data?.is_punch)
-                // setAttendanceid(attendanceid)
-                setLoading(false)
-            } else {
-                console.log('error in punch status api', api.data);
-                setIsPunchedIn(false)
-                setLoading(false)
-            }
+            Geolocation.getCurrentPosition(
+                position => {
+                    const { latitude, longitude } = position.coords;
+                    setCurrentLocation({ latitude, longitude });
+                    fetchAddress(latitude, longitude);
+                },
+                error => {
+                    console.error('Error fetching location:', error);
+                    setLoading(false);
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
+            );
         } catch (error) {
-            console.log('error while punch data api call', error);
-            setLoading(false)
-        }
-    }
-
-    const handlePunchIn = async () => {
-        try {
-            setLoading(true);
-            const currentDate = new Date();
-            const formattedDateTime = moment(currentDate).format('DD-MM-YYYY HH:mm:ss');
-            const latitude = currentLocation ? currentLocation.latitude : '';
-            const longitude = currentLocation ? currentLocation.longitude : '';
-            const formattedDate = moment(currentDate).format('DD-MM-YYYY');
-            const formattedTime = moment(currentDate).format('HH:mm:ss');
-            const requestbody = {
-                clock_in: formattedDateTime,
-                latitude: latitude,
-                longitude: longitude
-            }
-            const api: any = await postMethod(`api/clock-in`, requestbody);
-            // console.log('clockv', api?.data);
-            // console.log('api?.data?.data?.attendance_id', api?.data?.data?.attendance?.attendance_id);
-
-            if (api.status === 200) {
-                punchData()
-                // setAttendanceid(api?.data?.data?.attendance?.attendance_id)
-                setIsPunchedIn(true)
-                setCurrentTime(formattedDate)
-                setCurrentDate(formattedTime)
-                Snackbar.show({
-                    text: 'Punch In Successfully',
-                    duration: Snackbar.LENGTH_SHORT,
-                    textColor: 'white',
-                    backgroundColor: 'green',
-                });
-                // const attendanceIdFromAPI = api?.data?.data?.attendance?.attendance_id;
-                // if (attendanceIdFromAPI) {
-                //     await AsyncStorage.setItem('attendanceId', attendanceIdFromAPI.toString()); // Save the attendanceid to AsyncStorage
-                //     // setAttendanceid(attendanceIdFromAPI);
-                // }
-                setLoading(false)
-            } else {
-                console.log('api not work correctly');
-                Snackbar.show({
-                    text: 'Problem While PunchIn',
-                    duration: Snackbar.LENGTH_SHORT,
-                    textColor: 'black',
-                    backgroundColor: 'red',
-                });
-                setLoading(false)
-            }
-        } catch (error) {
-            console.log('Error while punching in punch in::', error);
+            console.error('Error requesting location:', error);
             setLoading(false);
         }
     };
 
-    const handlePunchOut = async () => {
-        // if (attendanceid) {
-            try {
-                setLoading(true)
-                const currentDate = new Date();
-                const formattedDateTime = moment(currentDate).format('DD-MM-YYYY HH:mm:ss');
-                const latitude = currentLocation ? currentLocation.latitude : '';
-                const longitude = currentLocation ? currentLocation.longitude : '';
+    const fetchAddress = async (latitude, longitude) => {
+        try {
+            const response = await axios.get(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyB0sTJadohiz4yL1uLBrO8MsCQD_VxfLvU&language&language=en`);
+            const addressComponents = response.data.results[0].address_components;
+            const address = `${addressComponents[1].long_name}, ${addressComponents[2].long_name}\n${addressComponents[addressComponents.length - 2].long_name} - ${addressComponents[addressComponents.length - 1].long_name}\n${addressComponents[addressComponents.length - 3].long_name}`;
+            setUserAddress(address);
+        } catch (error) {
+            console.error('Error fetching address:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAcceptDisclosure = () => {
+        setShowDisclosure(false);
+        requestLocationPermission();
+    };
+
+    const punchData = async () => {
+        setLoading(true);
+        try {
+            const api = await getMethod('api/punch-status');
+            if (api.status === 200) {
+                setIsPunchedIn(api.data.data.is_punch);
+            } else {
+                console.log('Error in punch status API', api.data);
+                setIsPunchedIn(false);
+            }
+        } catch (error) {
+            console.log('Error fetching punch data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePunch = async (type) => {
+        setLoading(true);
+        const currentDate = new Date();
+        const formattedDateTime = moment(currentDate).format('DD-MM-YYYY HH:mm:ss');
+        const latitude = currentLocation ? currentLocation.latitude : '';
+        const longitude = currentLocation ? currentLocation.longitude : '';
+        const requestBody = {
+            clock_in: type === 'in' ? formattedDateTime : null,
+            clock_out: type === 'out' ? formattedDateTime : null,
+            latitude,
+            longitude
+        };
+
+        try {
+            const endpoint = type === 'in' ? 'api/clock-in' : 'api/clock-out';
+            const api = await postMethod(endpoint, requestBody);
+
+            if (api.status === 200) {
+                punchData();
+                setIsPunchedIn(type === 'in');
                 const formattedDate = moment(currentDate).format('DD-MM-YYYY');
                 const formattedTime = moment(currentDate).format('HH:mm:ss');
-                const punchoutdata = {
-                    clock_out: formattedDateTime,
-                    latitude: latitude,
-                    longitude: longitude,
-                    // attendance_id: attendanceid
-                }
-                // console.log('punchoutdata', punchoutdata)
-                const api: any = await postMethod(`api/clock-out`, punchoutdata)
-                // console.log('apiiiiiout', api);
+                setCurrentTime(formattedDate);
+                setCurrentDate(formattedTime);
 
-                if (api.status === 200) {
-                    punchData()
-                    setIsPunchedIn(false)
-                    setCurrentTime(formattedDate)
-                    setCurrentDate(formattedTime)
-                    Snackbar.show({
-                        text: 'Punch out Successfully',
-                        duration: Snackbar.LENGTH_SHORT,
-                        textColor: 'black',
-                        backgroundColor: 'green',
-                    });
-          
-                    // await AsyncStorage.removeItem('attendanceId');
-                    setLoading(false)
-                    console.log('out');
-
-                } else {
-                    console.log('api not work correctly');
-                    setLoading(false)
-
-                }
-
-            } catch (error) {
-                console.log('Error while punching in punch_out', error);
                 Snackbar.show({
-                    text: 'Problem While PunchIn',
+                    text: type === 'in' ? 'Punch In Successfully' : 'Punch Out Successfully',
                     duration: Snackbar.LENGTH_SHORT,
-                    textColor: 'black',
+                    textColor: 'white',
+                    backgroundColor: 'green',
+                });
+            } else {
+                Snackbar.show({
+                    text: 'Problem While Punching',
+                    duration: Snackbar.LENGTH_SHORT,
+                    textColor: 'white',
                     backgroundColor: 'red',
                 });
-                setLoading(false)
+                console.log('API did not work correctly', api.data);
             }
-        // } else {
-        //     console.log('Please Try Again');
-
-        // }
-    }
+        } catch (error) {
+            console.log(`Error while punching ${type}:`, error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <View style={{ height: '100%', backgroundColor: 'white' }}>
-            <Header title='Attendance' showBellIcon={false} />
-            <ScrollView>
-                <View style={{ marginTop: 25, marginBottom: 15 }}>
-                    <TouchableOpacity onPress={() => navigation.navigate('MyAttendance')}>
-                        <Text style={{ color: '#49AA67', alignSelf: 'center' }}>View Report</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.liveAddress}>
-                    <View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                            <IonIcon name="location" color={'skyblue'} size={width * 0.06} style={styles.icon} />
-                            <Text style={[styles.addressText, { marginBottom: 10, paddingLeft: 10 }]}>Live Location</Text>
+        <>
+            {showDisclosure && <ProminentDisclosure onAccept={handleAcceptDisclosure} />}
+            {!showDisclosure && (
+                <View style={{ height: '100%', backgroundColor: 'white' }}>
+                    <Header title='Attendance' showBellIcon={false} />
+                    <ScrollView>
+                        <View style={{ marginTop: 25, marginBottom: 15 }}>
+                            <TouchableOpacity onPress={() => navigation.navigate('MyAttendance')}>
+                                <Text style={{ color: '#49AA67', alignSelf: 'center' }}>View Report</Text>
+                            </TouchableOpacity>
                         </View>
-                        <Text style={styles.addressText}>{useraddress}</Text>
-                        {/* <Text style={styles.addressText}>India</Text> */}
-                    </View>
-                </View>
-                <View style={[styles.liveAddress, { marginBottom: 50 }]}>
-                    <Text style={styles.time}>{currentTime}</Text>
-                    <Text style={styles.date}>{currentDate}</Text>
-
-                    <View>
-                        <View style={{ alignSelf: 'center', margin: 15, }}>
-                            {
-                                isPunchedIn ?
-                                    <TouchableOpacity style={styles.punchInBtn} onPress={handlePunchOut}>
-                                        <Text style={{ alignSelf: 'center', marginTop: width * 0.13, color: '#4F4D4D', fontWeight: '600', fontSize: width * 0.05 }}>Punch Out</Text>
-                                    </TouchableOpacity>
-                                    :
-                                    <TouchableOpacity style={styles.punchInBtn} onPress={handlePunchIn}>
-                                        <Text style={{ alignSelf: 'center', marginTop: width * 0.13, color: '#4F4D4D', fontWeight: '600', fontSize: width * 0.05 }}>Punch In</Text>
-                                    </TouchableOpacity>
-                            }
+                        <View style={styles.liveAddress}>
+                            <View>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                                    <IonIcon name="location" color={'skyblue'} size={width * 0.06} style={styles.icon} />
+                                    <Text style={[styles.addressText, { marginBottom: 10, paddingLeft: 10 }]}>Live Location</Text>
+                                </View>
+                                <Text style={styles.addressText}>{userAddress}</Text>
+                            </View>
                         </View>
-                        <Text style={styles.startWork}>{isPunchedIn ? 'End Your Work' : 'Start Your Work'}</Text>
-                    </View>
+                        <View style={[styles.liveAddress, { marginBottom: 50 }]}>
+                            <Text style={styles.time}>{currentTime}</Text>
+                            <Text style={styles.date}>{currentDate}</Text>
+                            <View>
+                                <View style={{ alignSelf: 'center', margin: 15 }}>
+                                    {isPunchedIn ? (
+                                        <TouchableOpacity style={styles.punchInBtn} onPress={() => handlePunch('out')}>
+                                            <Text style={{ alignSelf: 'center', marginTop: width * 0.13, color: '#4F4D4D', fontWeight: '600', fontSize: width * 0.05 }}>Punch Out</Text>
+                                        </TouchableOpacity>
+                                    ) : (
+                                        <TouchableOpacity style={styles.punchInBtn} onPress={() => handlePunch('in')}>
+                                            <Text style={{ alignSelf: 'center', marginTop: width * 0.13, color: '#4F4D4D', fontWeight: '600', fontSize: width * 0.05 }}>Punch In</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                                <Text style={styles.startWork}>{isPunchedIn ? 'End Your Work' : 'Start Your Work'}</Text>
+                            </View>
+                        </View>
+                    </ScrollView>
+                    <Loader visible={loading} />
                 </View>
-            </ScrollView>
-            <Loader visible={loading} />
-        </View>
+            )}
+        </>
     );
 };
-
-export default Attendance;
 
 const styles = StyleSheet.create({
     icon: {
@@ -307,7 +221,7 @@ const styles = StyleSheet.create({
         fontSize: width * 0.04,
         color: '#484A4B',
         textAlign: 'center',
-        fontWeight: '500'
+        fontWeight: '500',
     },
     liveAddress: {
         backgroundColor: '#F6F6F6',
@@ -328,8 +242,7 @@ const styles = StyleSheet.create({
         fontWeight: '900',
         color: '#484A4B',
         alignSelf: 'center',
-        marginBottom: 5
-
+        marginBottom: 5,
     },
     date: {
         fontSize: width * 0.045,
@@ -351,6 +264,8 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         color: '#4F4D4D',
         fontWeight: '600',
-        fontSize: width * 0.035
-    }
+        fontSize: width * 0.035,
+    },
 });
+
+export default Attendance;

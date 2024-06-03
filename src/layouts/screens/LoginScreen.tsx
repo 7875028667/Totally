@@ -16,8 +16,8 @@ interface Props {
 }
 
 
-const LoginScreen: FC<Props> = () => {
-    const navigation = useNavigation();
+const LoginScreen: FC<Props> = ({navigation}:any) => {
+    // const navigation = useNavigation();
 
     // const [isLoading, setLoading] = useState(false);
 
@@ -39,6 +39,8 @@ const LoginScreen: FC<Props> = () => {
             
             if (api.data.status === true) {
                 // setLoading(false);
+                console.log();
+                
                 await storeData(api.data)
                 Snackbar.show({
                     text: 'Login Succesfully',
@@ -46,7 +48,7 @@ const LoginScreen: FC<Props> = () => {
                     textColor: 'white',
                     backgroundColor: 'green',
                 });
-                navigation.replace('DrawerNavigator')
+                navigation.replace('ProminentDisclosure')
             } else {
                 // setLoading(false);
                 Snackbar.show({

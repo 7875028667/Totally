@@ -30,6 +30,7 @@ import Delivery from '../screens/Delivery';
 import OrderHistory from '../screens/OrderHistory';
 import OrderHistoryDetails from '../screens/OrderHistoryDetails';
 import OdometerHistory from '../screens/OdometerHistory';
+import ProminentDisclosure from '../../component/ProminentDisclosure';
 
 
 
@@ -73,6 +74,7 @@ const AppNavigation = () => {
       screenOptions={{ headerShown: false }}>
       <Stack.Screen name="DrawerNavigator" component={DrawerNavigator} />
       <Stack.Screen name='TabNavigator' component={TabNavigator} />
+      <Stack.Screen name='ProminentDisclosure' component={ProminentDisclosure} />
       <Stack.Screen name="HistoryAndTask" component={HistoryAndTask} />
       <Stack.Screen name="ProgressBar" component={ProgressBar} />
       <Stack.Screen name="PayslipSummary" component={PayslipSummary} />
